@@ -1,10 +1,16 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import App from './App.tsx'
-import './index.css'
+import React from "react";
+import { createRoot } from "react-dom/client";
+import "./index.css";
+import App from "./App";
+import { BrowserRouter as Router } from "react-router-dom";
+import { BlockchainWrapper } from "./components/Wrapper/BlockchainWrapper";
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-)
+const container = document.getElementById("root");
+const root = createRoot(container as HTMLElement);
+root.render(
+  <Router>
+    <BlockchainWrapper>
+      <App />
+    </BlockchainWrapper>
+  </Router>
+);
