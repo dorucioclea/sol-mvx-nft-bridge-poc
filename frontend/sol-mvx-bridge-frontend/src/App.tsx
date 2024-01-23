@@ -31,13 +31,15 @@ function App() {
         <div className="backgroundCircle1"></div>
         <div className="flex flex-col min-h-[100svh] text-white backdrop-blur-xl">
           <Header />
-          <Content>
-            <Routes>
-              <Route path="/" element={<Home />}></Route>
-              <Route path="/mvxLogin" element={<UnlockMvx />}></Route>
-              <Route path="/solLogin" element={<UnlockSol />}></Route>
-            </Routes>
-          </Content>
+          <BlockchainWrapper>
+            <Content>
+              <Routes>
+                <Route path="/" element={<Home />}></Route>
+                <Route path="/mvxLogin" element={<UnlockMvx />}></Route>
+                <Route path="/solLogin" element={<UnlockSol />}></Route>
+              </Routes>
+            </Content>
+          </BlockchainWrapper>
           <Footer />
         </div>
       </div>

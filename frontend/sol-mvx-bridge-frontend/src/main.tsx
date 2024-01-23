@@ -9,8 +9,6 @@ const container = document.getElementById("root");
 const root = createRoot(container as HTMLElement);
 root.render(
   <Router>
-    <BlockchainWrapper>
-      <App />
-    </BlockchainWrapper>
+    <App />
   </Router>
 );
