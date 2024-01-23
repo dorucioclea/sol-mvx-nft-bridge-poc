@@ -37,38 +37,32 @@ pub trait LockNfts {
 
     #[only_owner]
     #[endpoint(whitelistTokenIds)]
-    fn whitelist_token_ids(
-        &self,
-        token_ids: MultiValueEncoded<TokenIdentifier>,
-    ) {
-        for tid in token_ids.into_iter() {
-            self.locking_token_ids().insert(tid);
+    fn whitelist_token_identifiers(&self, token_ids: MultiValueEncoded<TokenIdentifier>) {
+        for token_identifier in token_ids.into_iter() {
+            self.token_identifiers_whitelist().insert(token_identifier);
         }
     }
 
     #[only_owner]
     #[endpoint(unWhitelistTokenIds)]
-    fn un_whitelist_token_ids(
-        &self,
-        token_ids: MultiValueEncoded<TokenIdentifier>,
-    ) {
+    fn un_whitelist_token_identifiers(&self, token_ids: MultiValueEncoded<TokenIdentifier>) {
         for tid in token_ids.into_iter() {
-            self.locking_token_ids().swap_remove(&tid);
+            self.token_identifiers_whitelist().swap_remove(&tid);
         }
     }
 
     #[only_owner]
     #[endpoint(addToAdminlist)]
-    fn add_to_admin_list(&self, addresses: MultiValueEncoded<ManagedAddress>){
-        for address in addresses.into_iter(){
+    fn add_to_admin_list(&self, addresses: MultiValueEncoded<ManagedAddress>) {
+        for address in addresses.into_iter() {
             self.admin_list().insert(address);
         }
     }
 
     #[only_owner]
     #[endpoint(removeFromAdminlist)]
-    fn remove_from_admin_list(&self, addresses: MultiValueEncoded<ManagedAddress>){
-        for address in addresses.into_iter(){
+    fn remove_from_admin_list(&self, addresses: MultiValueEncoded<ManagedAddress>) {
+        for address in addresses.into_iter() {
             self.admin_list().swap_remove(&address);
         }
     }
@@ -92,18 +86,21 @@ pub trait LockNfts {
     #[payable("*")]
     #[endpoint(lock)]
     fn lock(&self) {
-        require!(self.is_locking_paused().get()==false, "Locking paused");
+        require!(self.is_locking_paused().get() == false, "Locking paused");
         let payments = self.call_value().all_esdt_transfers();
         require!(payments.len() > 0usize, "Need to lock at least 1");
-        
+
         let caller = self.blockchain().get_caller();
 
         let mut locked_tokens = self.locked_tokens(&caller);
         for payment in payments.iter() {
-            require!(self.locking_token_ids().contains(&payment.token_identifier), "Invalid token id");
+            require!(
+                self.token_identifiers_whitelist()
+                    .contains(&payment.token_identifier),
+                "Invalid token id"
+            );
             locked_tokens.push(&payment);
         }
-    
 
         let number_of_locked_nfts = self.locked_tokens(&caller).len();
         if number_of_locked_nfts > 0 {
@@ -113,12 +110,19 @@ pub trait LockNfts {
 
     #[only_owner]
     #[endpoint(unlockForAddress)]
-    fn unlock(&self, address: ManagedAddress, tokens_unlocked: MultiValueEncoded<MultiValue3<TokenIdentifier,u64,BigUint>>){
-        require!(self.is_unlocking_paused().get()==false, "Unlocking paused");
+    fn unlock(
+        &self,
+        address: ManagedAddress,
+        tokens_unlocked: MultiValueEncoded<MultiValue3<TokenIdentifier, u64, BigUint>>,
+    ) {
+        require!(
+            self.is_unlocking_paused().get() == false,
+            "Unlocking paused"
+        );
 
         let mut payments = ManagedVec::new();
-        for token in tokens_unlocked.into_iter(){
-            let (token_id,nonce, amount) = token.into_tuple();
+        for token in tokens_unlocked.into_iter() {
+            let (token_id, nonce, amount) = token.into_tuple();
             let token_payment = EsdtTokenPayment::new(token_id, nonce, amount);
             self.unlocked_tokens(&address).push(&token_payment);
             payments.push(token_payment);
@@ -128,12 +132,13 @@ pub trait LockNfts {
         }
     }
 
-
     #[view(getAllDataForUser)]
     fn fetch_all_data(&self, address: OptionalValue<ManagedAddress>) -> DataOut<Self::Api> {
-        let unwrapped_address = address.into_option().unwrap_or_else(|| {self.blockchain().get_caller()});
+        let unwrapped_address = address
+            .into_option()
+            .unwrap_or_else(|| self.blockchain().get_caller());
 
-        let data_out = DataOut{
+        let data_out = DataOut {
             locked_tokens: self.locked_tokens(&unwrapped_address).iter().collect(),
             unlocked_tokens: self.unlocked_tokens(&unwrapped_address).iter().collect(),
             is_locking_paused: self.is_locking_paused().get(),
@@ -142,7 +147,6 @@ pub trait LockNfts {
 
         return data_out;
     }
-
 
     #[view(getNumberOfAddressesThatLocked)]
     fn get_number_of_addresses_that_locked(&self) -> usize {
@@ -165,11 +169,13 @@ pub trait LockNfts {
     }
 
     #[view(getAllLockers)]
-    fn get_all_lockers(&self) -> MultiValueEncoded<MultiValue2<ManagedAddress,ManagedVec<EsdtTokenPayment>>> {
+    fn get_all_lockers(
+        &self,
+    ) -> MultiValueEncoded<MultiValue2<ManagedAddress, ManagedVec<EsdtTokenPayment>>> {
         let mut lockers = MultiValueEncoded::new();
-        for user in self.addresses_that_locked().iter(){
+        for user in self.addresses_that_locked().iter() {
             let mut locked_tokens = ManagedVec::new();
-            for item in self.locked_tokens(&user).iter(){
+            for item in self.locked_tokens(&user).iter() {
                 locked_tokens.push(item);
             }
             lockers.push(MultiValue2::from((user, locked_tokens)));
@@ -178,11 +184,13 @@ pub trait LockNfts {
     }
 
     #[view(getAllUnlockers)]
-    fn get_all_unlockers(&self) -> MultiValueEncoded<MultiValue2<ManagedAddress,ManagedVec<EsdtTokenPayment>>> {
+    fn get_all_unlockers(
+        &self,
+    ) -> MultiValueEncoded<MultiValue2<ManagedAddress, ManagedVec<EsdtTokenPayment>>> {
         let mut unlockers = MultiValueEncoded::new();
-        for user in self.addresses_that_locked().iter(){
+        for user in self.addresses_that_locked().iter() {
             let mut unlocked_tokens = ManagedVec::new();
-            for nonce in self.locked_tokens(&user).iter(){
+            for nonce in self.locked_tokens(&user).iter() {
                 unlocked_tokens.push(nonce);
             }
             unlockers.push(MultiValue2::from((user, unlocked_tokens)));
@@ -192,7 +200,7 @@ pub trait LockNfts {
 
     #[view(getLockingTokenIds)]
     #[storage_mapper("locking_token_ids")]
-    fn locking_token_ids(&self) -> UnorderedSetMapper<TokenIdentifier>;
+    fn token_identifiers_whitelist(&self) -> UnorderedSetMapper<TokenIdentifier>;
 
     #[view(isLockingPaused)]
     #[storage_mapper("is_locking_paused")]

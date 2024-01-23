@@ -21,8 +21,8 @@ multiversx_sc_wasm_adapter::endpoints! {
     (
         init => init
         upgrade => upgrade
-        whitelistTokenIds => whitelist_token_ids
-        unWhitelistTokenIds => un_whitelist_token_ids
+        whitelistTokenIds => whitelist_token_identifiers
+        unWhitelistTokenIds => un_whitelist_token_identifiers
         addToAdminlist => add_to_admin_list
         removeFromAdminlist => remove_from_admin_list
         setIsLockingPaused => set_is_locking_paused
@@ -36,7 +36,7 @@ multiversx_sc_wasm_adapter::endpoints! {
         getAddressesThatUnlocked => get_addresses_that_unlocked
         getAllLockers => get_all_lockers
         getAllUnlockers => get_all_unlockers
-        getLockingTokenIds => locking_token_ids
+        getLockingTokenIds => token_identifiers_whitelist
         isLockingPaused => is_locking_paused
         isUnlockingPaused => is_unlocking_paused
         getRawLockedTokens => locked_tokens
