@@ -21,8 +21,9 @@ pub struct DataOut<M: ManagedTypeApi> {
     pub is_unlocking_paused: bool,
 }
 
+pub mod events;
 #[multiversx_sc::contract]
-pub trait LockNfts {
+pub trait LockNfts: events::EventsModule {
     #[init]
     fn init(&self) {
         self.is_locking_paused().set(true);
@@ -98,6 +99,12 @@ pub trait LockNfts {
                 self.token_identifiers_whitelist()
                     .contains(&payment.token_identifier),
                 "Invalid token id"
+            );
+            self.lock_event(
+                &caller,
+                &payment.token_identifier,
+                &payment.token_nonce,
+                &payment.amount,
             );
             locked_tokens.push(&payment);
         }
