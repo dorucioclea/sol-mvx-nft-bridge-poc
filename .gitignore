@@ -1,3 +1,6 @@
 *.pem
 output/
 target/
+
+
+.vs_code
