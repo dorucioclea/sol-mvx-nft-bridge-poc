@@ -35,7 +35,7 @@
     "copy-custom-config": "cp ./config/config.custom.yaml ./config/config.yaml"
   },
   "dependencies": {
-    "@itheum/sdk-mx-data-nft": "2.2.0",
+    "@itheum/sdk-mx-data-nft": "2.6.0",
     "@lighthouse-web3/sdk": "0.3.0",
     "@multiversx/sdk-core": "12.9.0",
     "@multiversx/sdk-nestjs-auth": "1.2.8",

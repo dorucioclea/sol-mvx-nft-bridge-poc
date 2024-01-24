@@ -8,7 +8,7 @@ import { BridgeService } from "./bridge.service";
 export class BridgeController {
   constructor(private readonly bridgeService: BridgeService) {}
 
-  @UseGuards(NativeAuthGuard)
+  //   @UseGuards(NativeAuthGuard)
   @Post("/process")
   @ApiBody({
     schema: {
