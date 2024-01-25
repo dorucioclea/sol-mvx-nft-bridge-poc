@@ -6,6 +6,25 @@ import axios from "axios";
 import { LockEvent } from "./bridge.interfaces";
 import { Address } from "@multiversx/sdk-core/out";
 import { replaceLastSegment } from "src/utils";
+import lighthouse from "@lighthouse-web3/sdk";
+
+import { createSignerFromKeypair, keypairIdentity } from "@metaplex-foundation/umi";
+import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
+import { percentAmount, generateSigner } from "@metaplex-foundation/umi";
+import {
+  TokenStandard,
+  createFungibleAsset,
+  fetchAllDigitalAsset,
+  fetchDigitalAsset,
+  mintV1,
+  mplTokenMetadata,
+  transferV1,
+} from "@metaplex-foundation/mpl-token-metadata";
+import { fromWeb3JsKeypair, fromWeb3JsPublicKey } from "@metaplex-foundation/umi-web3js-adapters";
+import { PublicKey } from "@solana/web3.js";
+import { Keypair } from "@solana/web3.js";
+import { receiveMessageOnPort } from "worker_threads";
+
 @Injectable()
 export class BridgeService {
   private logger = new Logger(BridgeService.name);
@@ -38,8 +57,59 @@ export class BridgeService {
 
     const solOBject = await this.buildJsonObject(dataNft);
 
-    // upload to Ipfs
+    const uploadResponse = await lighthouse.uploadText(JSON.stringify(solOBject), process.env.LIGHTHOUSE_API_KEY);
+
+    this.pinIpfsHash(uploadResponse.data.Hash);
+
+    const ipfsLink = `https://ipfs.io/ipfs/${uploadResponse.data.Hash}`;
+    const lightHouseGateway = `https://gateway.lighthouse.storage/ipfs/${uploadResponse.data.Hash}`;
+
     // trigger mint on solana (same supply that was added to contract)
+
+    // solana
+
+    const umi = createUmi("https://api.devnet.solana.com");
+
+    const mintPK = [22, 143]; // private key of minter;
+
+    // -------------------
+    const myMintKeypair = Keypair.fromSecretKey(Uint8Array.from(mintPK));
+
+    const pkMint = myMintKeypair.publicKey;
+
+    const keypair = umi.eddsa.createKeypairFromSecretKey(myMintKeypair.secretKey);
+
+    umi.use(keypairIdentity(keypair)).use(mplTokenMetadata());
+
+    const signerKp = createSignerFromKeypair(umi, fromWeb3JsKeypair(myMintKeypair));
+
+    const nftMint = generateSigner(umi);
+    // store this binded with the tokenIdentifier and nonce from mvx (use this in mints)
+
+    const recipientPubkey = new PublicKey(lockEvent.recipient);
+
+    await createFungibleAsset(umi, {
+      mint: nftMint,
+      name: dataNft.tokenName,
+      uri: lightHouseGateway,
+      sellerFeeBasisPoints: percentAmount(dataNft.royalties),
+      authority: signerKp,
+      creators: [
+        {
+          address: fromWeb3JsPublicKey(recipientPubkey),
+          verified: false,
+          share: 100,
+        },
+      ],
+    }).sendAndConfirm(umi);
+
+    await mintV1(umi, {
+      mint: nftMint.publicKey,
+      authority: signerKp,
+      amount: lockEvent.amount,
+      tokenOwner: fromWeb3JsPublicKey(recipientPubkey),
+      tokenStandard: TokenStandard.FungibleAsset,
+    }).sendAndConfirm(umi);
   }
 
   private mergeAndFilterLogs(response, logIdentifier: String) {
@@ -77,5 +147,17 @@ export class BridgeService {
       ],
     };
     return solJson;
+  }
+
+  async pinIpfsHash(hash: string): Promise<void> {
+    const pinningEndpoint = "https://api.lighthouse.storage/api/lighthouse/pin";
+    const data = { cid: hash };
+    const apiKey = process.env.LIGHTHOUSE_API_KEY;
+    await axios.post(pinningEndpoint, data, {
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+    });
   }
 }
