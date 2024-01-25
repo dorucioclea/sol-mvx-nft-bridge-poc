@@ -3,4 +3,5 @@ export interface LockEvent {
   tokenIdentifier: string;
   nonce: number;
   amount: number;
+  recipient: string;
 }

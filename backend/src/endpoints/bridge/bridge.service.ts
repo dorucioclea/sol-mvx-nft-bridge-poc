@@ -21,17 +21,14 @@ export class BridgeService {
 
     const response = await axios.get(query);
 
-    const eventsFromResponseLogs = response.data[0].logs.events;
-    const transactionsWithLogs = response.data[0].results.filter((transaction) => transaction.logs);
-    const eventsFromTransactionsWithLogs = transactionsWithLogs.flatMap((transaction) => transaction.logs.events);
-    const allEvents = [...eventsFromResponseLogs, ...eventsFromTransactionsWithLogs];
-    const interestedTopic = allEvents.find((event) => event.topics[0] === "bG9ja0V2ZW50");
+    const interestedTopic = this.mergeAllLogs(response);
 
     const lockEvent: LockEvent = {
       caller: new Address(Buffer.from(interestedTopic.topics[1], "base64")).bech32(),
       tokenIdentifier: Buffer.from(interestedTopic.topics[2], "base64").toString("utf8"),
       nonce: parseInt(Buffer.from(interestedTopic.topics[3], "base64").toString("hex"), 16),
       amount: parseInt(Buffer.from(interestedTopic.topics[4], "base64").toString("hex"), 16),
+      recipient: Buffer.from(interestedTopic.topics[5], "base64").toString("utf8"),
     };
 
     const dataNft = await DataNft.createFromApi({
@@ -43,6 +40,15 @@ export class BridgeService {
 
     // upload to Ipfs
     // trigger mint on solana (same supply that was added to contract)
+  }
+
+  private mergeAllLogs(response) {
+    const eventsFromResponseLogs = response.data[0].logs.events;
+    const transactionsWithLogs = response.data[0].results.filter((transaction) => transaction.logs);
+    const eventsFromTransactionsWithLogs = transactionsWithLogs.flatMap((transaction) => transaction.logs.events);
+    const allEvents = [...eventsFromResponseLogs, ...eventsFromTransactionsWithLogs];
+    const interestedTopic = allEvents.find((event) => event.topics[0] === "bG9ja0V2ZW50");
+    return interestedTopic;
   }
 
   private async buildJsonObject(dataNft: DataNft): Promise<any> {
