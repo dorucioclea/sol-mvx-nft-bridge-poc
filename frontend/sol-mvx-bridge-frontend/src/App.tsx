@@ -1,27 +1,14 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
 import "./App.css";
 import { Header } from "./components/Layout/Header";
 import { Content } from "./components/Layout/Content";
 import { Footer } from "./components/Layout/Footer";
-import { AuthenticatedRoutesWrapper, DappProvider } from "@multiversx/sdk-dapp/wrappers";
 import { Home } from "./pages/Home/Home";
 import { Route, Routes } from "react-router-dom";
-import { NotificationModal, SignTransactionsModals, TransactionsToastList } from "@multiversx/sdk-dapp/UI";
-import { apiTimeout, walletConnectV2ProjectId } from "./config";
 import { UnlockMvx } from "./pages/MultiversXUnlockPage/UnlockMvx";
 import { UnlockSol } from "./pages/SolanaUnlockPage/UnlockSol";
 import { BlockchainWrapper } from "./components/Wrapper/BlockchainWrapper";
-
-const routes = [
-  {
-    path: "/",
-    title: "Home",
-    component: Home,
-    authenticatedRoute: false,
-  },
-];
+import { SolNfts } from "./pages/SolNfts/SolNfts";
+import { MultiversXNfts } from "./pages/MultiversXNfts/MultiversXNfts";
 
 function App() {
   return (
@@ -37,6 +24,8 @@ function App() {
                 <Route path="/" element={<Home />}></Route>
                 <Route path="/mvxLogin" element={<UnlockMvx />}></Route>
                 <Route path="/solLogin" element={<UnlockSol />}></Route>
+                <Route path="/solanaNfts" element={<SolNfts />}></Route>
+                <Route path="/mvxNfts" element={<MultiversXNfts />}></Route>
               </Routes>
             </Content>
           </BlockchainWrapper>
