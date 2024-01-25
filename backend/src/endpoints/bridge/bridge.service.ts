@@ -21,7 +21,7 @@ export class BridgeService {
 
     const response = await axios.get(query);
 
-    const interestedTopic = this.mergeAllLogs(response);
+    const interestedTopic = this.mergeAndFilterLogs(response, "bG9ja0V2ZW50");
 
     const lockEvent: LockEvent = {
       caller: new Address(Buffer.from(interestedTopic.topics[1], "base64")).bech32(),
@@ -42,12 +42,12 @@ export class BridgeService {
     // trigger mint on solana (same supply that was added to contract)
   }
 
-  private mergeAllLogs(response) {
+  private mergeAndFilterLogs(response, logIdentifier: String) {
     const eventsFromResponseLogs = response.data[0].logs.events;
     const transactionsWithLogs = response.data[0].results.filter((transaction) => transaction.logs);
     const eventsFromTransactionsWithLogs = transactionsWithLogs.flatMap((transaction) => transaction.logs.events);
     const allEvents = [...eventsFromResponseLogs, ...eventsFromTransactionsWithLogs];
-    const interestedTopic = allEvents.find((event) => event.topics[0] === "bG9ja0V2ZW50");
+    const interestedTopic = allEvents.find((event) => event.topics[0] === logIdentifier);
     return interestedTopic;
   }
 
