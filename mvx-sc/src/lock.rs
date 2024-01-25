@@ -86,7 +86,7 @@ pub trait LockNfts: events::EventsModule {
 
     #[payable("*")]
     #[endpoint(lock)]
-    fn lock(&self) {
+    fn lock(&self, recipient: ManagedBuffer) {
         require!(self.is_locking_paused().get() == false, "Locking paused");
         let payments = self.call_value().all_esdt_transfers();
         require!(payments.len() > 0usize, "Need to lock at least 1");
@@ -105,6 +105,7 @@ pub trait LockNfts: events::EventsModule {
                 &payment.token_identifier,
                 &payment.token_nonce,
                 &payment.amount,
+                &recipient,
             );
             locked_tokens.push(&payment);
         }

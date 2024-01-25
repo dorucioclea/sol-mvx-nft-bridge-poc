@@ -10,5 +10,6 @@ pub trait EventsModule {
         #[indexed] token_identifier: &TokenIdentifier,
         #[indexed] nonce: &u64,
         #[indexed] amount: &BigUint,
+        #[indexed] recipient: &ManagedBuffer,
     );
 }
