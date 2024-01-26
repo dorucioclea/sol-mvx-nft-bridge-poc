@@ -12,37 +12,40 @@ import { MultiversXNfts } from "./pages/MultiversX/MultiversXNfts/MultiversXNfts
 import { SolHome } from "./pages/Solana/Home/SolHome";
 import { MvxHome } from "./pages/MultiversX/Home/MvxHome";
 import { Bridge } from "./pages/Bridge/Bridge";
+import { StoreProvider } from "./store/StoreProvider";
 
 function App() {
   return (
     <>
-      <div className="">
-        <div className="backgroundCircle"></div>
-        <div className="backgroundCircle1"></div>
-        <div className="flex flex-col min-h-[100svh] text-white backdrop-blur-xl">
-          <Header />
-          <BlockchainWrapper>
-            <Content>
-              <Routes>
-                <Route path="/" element={<Home />}></Route>
-                <Route path="bridge" element={<Bridge />} />
+      <StoreProvider>
+        <div className="">
+          <div className="backgroundCircle"></div>
+          <div className="backgroundCircle1"></div>
+          <div className="flex flex-col min-h-[100svh] text-white backdrop-blur-xl">
+            <Header />
+            <BlockchainWrapper>
+              <Content>
+                <Routes>
+                  <Route path="/" element={<Home />}></Route>
+                  <Route path="bridge" element={<Bridge />} />
 
-                <Route path="sol" element={<Outlet />}>
-                  <Route path="" element={<SolHome />} />
-                  <Route path="solLogin" element={<UnlockSol />} />
-                  <Route path="solNfts" element={<SolNfts />} />
-                </Route>
-                <Route path="mvx" element={<Outlet />}>
-                  <Route path="" element={<MvxHome />} />
-                  <Route path="mvxLogin" element={<UnlockMvx />} />
-                  <Route path="mvxNfts" element={<MultiversXNfts />} />
-                </Route>
-              </Routes>
-            </Content>
-          </BlockchainWrapper>
-          <Footer />
+                  <Route path="sol" element={<Outlet />}>
+                    <Route path="" element={<SolHome />} />
+                    <Route path="solLogin" element={<UnlockSol />} />
+                    <Route path="solNfts" element={<SolNfts />} />
+                  </Route>
+                  <Route path="mvx" element={<Outlet />}>
+                    <Route path="" element={<MvxHome />} />
+                    <Route path="mvxLogin" element={<UnlockMvx />} />
+                    <Route path="mvxNfts" element={<MultiversXNfts />} />
+                  </Route>
+                </Routes>
+              </Content>
+            </BlockchainWrapper>
+            <Footer />
+          </div>
         </div>
-      </div>
+      </StoreProvider>
     </>
   );
 }

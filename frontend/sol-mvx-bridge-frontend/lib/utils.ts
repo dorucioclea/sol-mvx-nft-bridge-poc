@@ -1,6 +1,7 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { Connection, PublicKey } from "@solana/web3.js";
+import { useUserStore } from "../src/store/user";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -17,10 +18,13 @@ export const getProvider = () => {
   window.open("https://phantom.app/", "_blank");
 };
 
-const connection = new Connection("https://api.devnet.solana.com");
-export const getWalletBalance = async (pubKey1: PublicKey) => {
-  if (typeof pubKey1 === "undefined" || pubKey1 === null) return;
-  let balance = await connection.getBalance(pubKey1);
+export const getWalletBalance = async (pubKey: PublicKey) => {
+  const connection = new Connection("https://api.devnet.solana.com");
+  const updaSolanaBalance = useUserStore((state) => state.updateSolanaBalance);
+
+  if (typeof pubKey === "undefined" || pubKey === null) return;
+  let balance = await connection.getBalance(pubKey);
+  updaSolanaBalance(Number(balance));
   return balance;
 };
 

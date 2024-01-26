@@ -1,28 +1,17 @@
 import React, { useEffect, useMemo } from "react";
 import { Button } from "../../../ui/button";
-import { getProvider } from "../../../../lib/utils";
+import { getProvider, getWalletBalance } from "../../../../lib/utils";
 import { useUserStore } from "../../../store/user";
-import { Connection, PublicKey } from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 import { useNavigate } from "react-router-dom";
 
 export const UnlockSol: React.FC = () => {
-  const storePublicKey = useUserStore((state) => state.publicKey);
   const isSolanaLoggedIn = useUserStore((state) => state.isSolanaLoggedIn);
-  const solanaBalance = useUserStore((state) => state.solanaBalance);
   const updateIsSolanaLoggedIn = useUserStore((state) => state.updateIsSolanaLoggedIn);
   const updatePublicKey = useUserStore((state) => state.updatePublicKey);
-  const updaSolanaBalance = useUserStore((state) => state.updateSolanaBalance);
   const provider = getProvider();
   const navigate = useNavigate();
   // console.log(storePublicKey, solanaBalance);
-
-  const connection = new Connection("https://api.devnet.solana.com");
-  const getWalletBalance = async (pubKey: PublicKey) => {
-    if (typeof pubKey === "undefined" || pubKey === null) return;
-    let balance = await connection.getBalance(pubKey);
-    updaSolanaBalance(Number(balance));
-    return balance;
-  };
 
   const connect = async () => {
     if (!provider) return;
@@ -53,17 +42,18 @@ export const UnlockSol: React.FC = () => {
       // console.log(balance);
       updatePublicKey(publicKey.toString());
       updateIsSolanaLoggedIn(true);
+      localStorage.setItem("solanaPublicKey", publicKey.toString());
       getWalletBalance(publicKey);
       navigate("/sol/solanaNfts");
     });
     provider.on("disconnect", () => {
       updatePublicKey("");
       updateIsSolanaLoggedIn(false);
+      localStorage.setItem("solanaPublicKey", "");
     });
     provider.on("accountChanged", (publicKey: PublicKey) => {
       if (publicKey) {
         updatePublicKey(publicKey.toString());
-        // Set new public key and continue as usual
         console.log(`Switched to account ${publicKey.toBase58()}`);
       }
     });
