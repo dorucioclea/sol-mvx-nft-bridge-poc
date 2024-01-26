@@ -27,13 +27,13 @@ export const Header: React.FC = () => {
   };
 
   return (
-    <nav className="text-white text-xl bg-gray-600/10">
+    <nav className="text-xl bg-gray-700/20">
       <div className="flex flex-row justify-between px-12 items-center h-14 ">
         <div className="flex justify-center items-center gap-10">
           <Link to={"/"} className="flex flex-row">
             <p className="bg-gradient-to-r bg-clip-text text-transparent from-violet-500 to-teal-400 text-lg text-left font-bold">Bridge-POC</p>
           </Link>
-          <Link to={"/bridge"} className="text-sm font-semibold hover:scale-105 hover:-translate-y-0.5 hover:transition hover:duration-300">
+          <Link to={"/bridge"} className="text-base font-medium hover:scale-105 hover:-translate-y-0.5 hover:transition hover:duration-300">
             Bridge
           </Link>
         </div>
@@ -41,7 +41,7 @@ export const Header: React.FC = () => {
           {isMxLoggedIn ? (
             <DropdownComponent
               triggerButton={
-                <Button className="text-background bg-transparent font-semibold" variant="ghost">
+                <Button className="bg-transparent font-semibold" variant="ghost">
                   {Number(formatAmount({ input: balance ?? 0 })).toFixed(3)} EGLD
                   <Avatar className="w-8 h-8 ml-2">
                     <AvatarImage src={mvxAvatar} alt="mvxAvatar" />
@@ -54,7 +54,7 @@ export const Header: React.FC = () => {
             />
           ) : (
             <Link to={"mvx/mvxLogin"}>
-              <Button className="text-background bg-transparent font-semibold" variant="outline">
+              <Button className="font-semibold" variant="outline">
                 Connect MVX
               </Button>
             </Link>
@@ -64,7 +64,7 @@ export const Header: React.FC = () => {
             <DropdownComponent
               walletAddress={storePublicKey}
               triggerButton={
-                <Button className="text-background bg-transparent font-semibold" variant="ghost">
+                <Button className="bg-transparent font-semibold" variant="ghost">
                   {Number(solanaBalance / LAMPORTS_PER_SOL).toFixed(3)} SOL
                   <Avatar className="w-8 h-8 ml-2">
                     <AvatarImage src={solAvatar} alt="solAvatar" />
@@ -76,7 +76,7 @@ export const Header: React.FC = () => {
             />
           ) : (
             <Link to={"sol/solLogin"}>
-              <Button className="text-background bg-transparent font-semibold" variant="outline">
+              <Button className="font-semibold">
                 <p className="">Connect SOL</p>
               </Button>
             </Link>

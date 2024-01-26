@@ -11,6 +11,7 @@ import { SolNfts } from "./pages/Solana/SolNfts/SolNfts";
 import { MultiversXNfts } from "./pages/MultiversX/MultiversXNfts/MultiversXNfts";
 import { SolHome } from "./pages/Solana/Home/SolHome";
 import { MvxHome } from "./pages/MultiversX/Home/MvxHome";
+import { Bridge } from "./pages/Bridge/Bridge";
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
             <Content>
               <Routes>
                 <Route path="/" element={<Home />}></Route>
+                <Route path="bridge" element={<Bridge />} />
 
                 <Route path="sol" element={<Outlet />}>
                   <Route path="" element={<SolHome />} />
