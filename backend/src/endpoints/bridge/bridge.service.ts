@@ -1,34 +1,24 @@
+import { DataNft } from "@itheum/sdk-mx-data-nft/out";
+import lighthouse from "@lighthouse-web3/sdk";
+import { Address } from "@multiversx/sdk-core/out";
 import { LoggerInitializer } from "@multiversx/sdk-nestjs-common";
 import { HttpException, HttpStatus, Injectable, Logger } from "@nestjs/common";
-import { ApiConfigService } from "src/common/api-config/api.config.service";
-import { DataNft } from "@itheum/sdk-mx-data-nft/out";
 import axios from "axios";
-import { LockEvent } from "./bridge.interfaces";
-import { Address } from "@multiversx/sdk-core/out";
+import { ApiConfigService } from "src/common/api-config/api.config.service";
 import { replaceLastSegment } from "src/utils";
-import lighthouse from "@lighthouse-web3/sdk";
+import { LockEvent } from "./bridge.interfaces";
 
-import { createSignerFromKeypair, keypairIdentity } from "@metaplex-foundation/umi";
+import { TokenStandard, createFungibleAsset, mintV1, mplTokenMetadata } from "@metaplex-foundation/mpl-token-metadata";
+import { createSignerFromKeypair, generateSigner, keypairIdentity, percentAmount } from "@metaplex-foundation/umi";
 import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
-import { percentAmount, generateSigner } from "@metaplex-foundation/umi";
-import {
-  TokenStandard,
-  createFungibleAsset,
-  fetchAllDigitalAsset,
-  fetchDigitalAsset,
-  mintV1,
-  mplTokenMetadata,
-  transferV1,
-} from "@metaplex-foundation/mpl-token-metadata";
 import { fromWeb3JsKeypair, fromWeb3JsPublicKey } from "@metaplex-foundation/umi-web3js-adapters";
-import { PublicKey } from "@solana/web3.js";
-import { Keypair } from "@solana/web3.js";
 import { InjectRepository } from "@nestjs/typeorm";
-import { In, Repository } from "typeorm";
-import { TransactionB } from "./entities/transaction.entity";
+import { Keypair, PublicKey } from "@solana/web3.js";
+import { Repository } from "typeorm";
 import { CollectionDto } from "./dto/collection.dto";
-import { CollectionB } from "./entities/collection.entity";
 import { TransactionDto } from "./dto/transaction.entity";
+import { CollectionB } from "./entities/collection.entity";
+import { TransactionB } from "./entities/transaction.entity";
 
 @Injectable()
 export class BridgeService {
