@@ -8,4 +8,6 @@ export class TransactionB {
   txHash: string;
   @Column()
   timestamp: number;
+  @Column()
+  address: string;
 }

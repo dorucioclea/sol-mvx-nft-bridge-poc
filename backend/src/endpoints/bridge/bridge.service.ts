@@ -53,7 +53,7 @@ export class BridgeService {
 
   // process method
 
-  async process(txHash: string) {
+  async process(txHash: string, address: string) {
     DataNft.setNetworkConfig(this.apiConfigService.getItheumSdkEnvironment());
 
     const alreadyProcessed = await this.findTransactionByHash(txHash);
@@ -66,6 +66,10 @@ export class BridgeService {
     `;
 
     const response = await axios.get(query);
+
+    if (response.data.sender != address) {
+      throw new HttpException("Not authorized", HttpStatus.UNAUTHORIZED);
+    }
 
     const interestedTopic = this.mergeAndFilterLogs(response, "bG9ja0V2ZW50");
 
@@ -136,7 +140,7 @@ export class BridgeService {
       const collectionDto: CollectionDto = {
         tokenIdentifier: lockEvent.tokenIdentifier,
         nonce: lockEvent.nonce,
-        sftPrivateKey: Array.from(nftMint.secretKey).join(","),
+        sftPrivateKey: Array.from(nftMint.secretKey).join(","), // [to do] store the public key, because the private key is not needed
       };
 
       const storedCollection = await this.createCollection(collectionDto);
@@ -161,6 +165,7 @@ export class BridgeService {
     const tx = await this.createTransaction({
       txHash: txHash,
       timestamp: Math.floor(Date.now() / 1000),
+      address: address,
     });
 
     this.logger.log(
