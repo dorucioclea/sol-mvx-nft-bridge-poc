@@ -15,10 +15,12 @@ export const StoreProvider: React.FC<StoreProviderProps> = (props) => {
 
   const solanaPublicKey = localStorage.getItem("solanaPublicKey");
 
-  getWalletBalance(new PublicKey(solanaPublicKey ?? ""));
+  if (solanaPublicKey !== null && solanaPublicKey !== "") {
+    getWalletBalance(new PublicKey(solanaPublicKey));
+  }
 
   useEffect(() => {
-    if (solanaPublicKey !== null) {
+    if (solanaPublicKey !== null && solanaPublicKey !== "") {
       updatePublicKey(solanaPublicKey);
       updateIsSolanaLoggedIn(true);
     } else {
