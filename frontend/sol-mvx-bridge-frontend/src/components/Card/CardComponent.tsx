@@ -14,7 +14,7 @@ type CardComponentProps = {
 };
 export const CardComponent: React.FC<CardComponentProps> = (props) => {
   const { title, imgSrc, alt, dataNfts, selectedDataNfts, setSelectedDataNfts } = props;
-  console.log(selectedDataNfts);
+  // console.log(selectedDataNfts);
 
   const updateDataNfts = (newDataNft: DataNft) => {
     const index = selectedDataNfts?.findIndex((item) => item.nonce === newDataNft.nonce);

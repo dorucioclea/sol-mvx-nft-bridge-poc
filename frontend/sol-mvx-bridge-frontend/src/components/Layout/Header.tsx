@@ -17,7 +17,7 @@ export const Header: React.FC = () => {
   const isSolLoggedIn = useUserStore((state) => state.isSolanaLoggedIn);
   const solanaBalance = useUserStore((state) => state.solanaBalance);
   const storePublicKey = useUserStore((state) => state.publicKey);
-  console.log(balance);
+  // console.log(balance);
 
   const mvxLogout = logout;
 
