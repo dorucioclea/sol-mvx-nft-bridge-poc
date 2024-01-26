@@ -69,7 +69,7 @@ export class BridgeService {
     const alreadyProcessed = await this.findTransactionByHash(txHash);
 
     if (alreadyProcessed) {
-      return;
+      throw new HttpException("Already processed", HttpStatus.BAD_REQUEST);
     }
 
     const query = `${this.apiConfigService.getApiUrl()}/transactions?hashes=${txHash}&status=success&withScResults=true&withLogs=true
@@ -112,37 +112,21 @@ export class BridgeService {
     // -------------------
     const myMintKeypair = Keypair.fromSecretKey(Uint8Array.from(mintPK));
 
-    const pkMint = myMintKeypair.publicKey;
-
     const keypair = umi.eddsa.createKeypairFromSecretKey(myMintKeypair.secretKey);
-
-    umi.use(keypairIdentity(keypair)).use(mplTokenMetadata());
 
     const signerKp = createSignerFromKeypair(umi, fromWeb3JsKeypair(myMintKeypair));
 
-    const collection: CollectionB = await this.findCollectionByTokenIdentifierAndNonce(
+    umi.use(keypairIdentity(keypair)).use(mplTokenMetadata());
+
+    let collection: CollectionB = await this.findCollectionByTokenIdentifierAndNonce(
       lockEvent.tokenIdentifier,
       lockEvent.nonce
     );
 
     const recipientPubkey = new PublicKey(lockEvent.recipient);
 
-    if (collection) {
-      console.log(collection);
-      const sftPrivateKeyArray = collection.sftPrivateKey.split(",").map(Number);
-      const sftKeyPair = umi.eddsa.createKeypairFromSecretKey(Uint8Array.from(sftPrivateKeyArray));
-
-      await mintV1(umi, {
-        mint: sftKeyPair.publicKey,
-        authority: signerKp,
-        amount: lockEvent.amount,
-        tokenOwner: fromWeb3JsPublicKey(recipientPubkey),
-        tokenStandard: TokenStandard.FungibleAsset,
-      }).sendAndConfirm(umi);
-    } else {
+    if (!collection) {
       const nftMint = generateSigner(umi);
-
-      // store this binded with the tokenIdentifier and nonce from mvx (use this in mints)
 
       await createFungibleAsset(umi, {
         mint: nftMint,
@@ -159,14 +143,6 @@ export class BridgeService {
         ],
       }).sendAndConfirm(umi);
 
-      await mintV1(umi, {
-        mint: nftMint.publicKey,
-        authority: signerKp,
-        amount: lockEvent.amount,
-        tokenOwner: fromWeb3JsPublicKey(recipientPubkey),
-        tokenStandard: TokenStandard.FungibleAsset,
-      }).sendAndConfirm(umi);
-
       const collectionDto: CollectionDto = {
         tokenIdentifier: lockEvent.tokenIdentifier,
         nonce: lockEvent.nonce,
@@ -180,10 +156,24 @@ export class BridgeService {
       }
     }
 
-    await this.createTransaction({
+    collection = await this.findCollectionByTokenIdentifierAndNonce(lockEvent.tokenIdentifier, lockEvent.nonce);
+    const sftPrivateKeyArray = collection.sftPrivateKey.split(",").map(Number);
+    const sftKeyPair = umi.eddsa.createKeypairFromSecretKey(Uint8Array.from(sftPrivateKeyArray));
+
+    await mintV1(umi, {
+      mint: sftKeyPair.publicKey,
+      authority: signerKp,
+      amount: lockEvent.amount,
+      tokenOwner: fromWeb3JsPublicKey(recipientPubkey),
+      tokenStandard: TokenStandard.FungibleAsset,
+    }).sendAndConfirm(umi);
+
+    const tx = await this.createTransaction({
       txHash: txHash,
       timestamp: Math.floor(Date.now() / 1000),
     });
+
+    console.log(tx);
 
     return HttpStatus.CREATED;
   }

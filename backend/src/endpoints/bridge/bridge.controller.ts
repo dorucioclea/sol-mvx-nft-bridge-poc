@@ -21,6 +21,6 @@ export class BridgeController {
     },
   })
   async process(@Body("txHash") txHash: string) {
-    this.bridgeService.process(txHash);
+    await this.bridgeService.process(txHash);
   }
 }
