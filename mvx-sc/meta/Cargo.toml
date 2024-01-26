@@ -1,0 +1,17 @@
+[package]
+name = "locknfts-meta"
+version = "0.0.1"
+edition = "2021"
+publish = false
+authors = [ "Ovidiu Damian"]
+
+[dev-dependencies]
+
+[dependencies.locknfts]
+path = ".."
+
+[dependencies.multiversx-sc]
+version = "0.46.1"
+
+[dependencies.multiversx-sc-meta]
+version = "0.46.1"
