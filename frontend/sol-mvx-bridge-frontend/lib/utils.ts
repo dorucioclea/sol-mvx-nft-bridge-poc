@@ -23,3 +23,7 @@ export const getWalletBalance = async (pubKey1: PublicKey) => {
   let balance = await connection.getBalance(pubKey1);
   return balance;
 };
+
+export const clearMvxSessionStorage = () => {
+  localStorage.removeItem("persist:sdk-dapp-store");
+};

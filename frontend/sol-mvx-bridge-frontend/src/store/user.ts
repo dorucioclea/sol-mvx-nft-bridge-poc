@@ -1,10 +1,8 @@
 import { create } from "zustand";
-import { SolAmount } from "@metaplex-foundation/umi";
-import { PublicKey } from "@solana/web3.js";
 
 type State = {
   isSolanaLoggedIn: boolean;
-  publicKey: string | null;
+  publicKey: string;
   solanaBalance: number;
 };
 
@@ -17,8 +15,8 @@ type Action = {
 export const useUserStore = create<State & Action>((set) => ({
   isSolanaLoggedIn: false,
   updateIsSolanaLoggedIn: (value: boolean) => set(() => ({ isSolanaLoggedIn: value })),
-  publicKey: null,
-  updatePublicKey: (value: string | null) => set(() => ({ publicKey: value })),
+  publicKey: "",
+  updatePublicKey: (value: string) => set(() => ({ publicKey: value })),
   solanaBalance: 0,
   updateSolanaBalance: (value: number) => set(() => ({ solanaBalance: value })),
 }));

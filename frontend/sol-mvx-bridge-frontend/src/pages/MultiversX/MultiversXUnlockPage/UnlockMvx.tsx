@@ -12,8 +12,8 @@ export const UnlockMvx: React.FC = () => {
   return (
     <div className="shadow-inner shadow-white rounded-xl bg-transparent backdrop-blur-3xl p-14">
       <div className="flex flex-col w-full gap-4">
-        <ExtensionLoginButton className={buttonStyles} callbackRoute={"/"} onLoginRedirect={() => navigate("/mvxNfts")} loginButtonText={"Extension"} />
-        <WalletConnectLoginButton className={buttonStyles} callbackRoute={"/"} onLoginRedirect={() => navigate("/mvxNfts")} loginButtonText={"xPortal"} />
+        <ExtensionLoginButton className={buttonStyles} callbackRoute={"/mvx"} onLoginRedirect={() => navigate("/mvx")} loginButtonText={"Extension"} />
+        <WalletConnectLoginButton className={buttonStyles} callbackRoute={"/mvx"} onLoginRedirect={() => navigate("/mvx")} loginButtonText={"xPortal"} />
         <WebWalletLoginButton className={buttonStyles} callbackRoute={"/"} loginButtonText={"Web wallet"} />
       </div>
     </div>

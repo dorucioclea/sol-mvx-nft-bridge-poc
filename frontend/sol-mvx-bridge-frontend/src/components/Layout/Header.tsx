@@ -2,15 +2,29 @@ import React from "react";
 import { Link, NavLink } from "react-router-dom";
 import { Button } from "../../ui/button";
 import { useGetAccount, useGetIsLoggedIn } from "@multiversx/sdk-dapp/hooks";
-import { formatAmount } from "@multiversx/sdk-dapp/utils";
+import { formatAmount, logout } from "@multiversx/sdk-dapp/utils";
 import mvxAvatar from "../../assets/mvxAvatar.png";
+import solAvatar from "../../assets/solAvatar.png";
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
 import { useUserStore } from "../../store/user";
+import { DropdownComponent } from "../DropdownMenu/DropdownComponent";
+import { LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { clearMvxSessionStorage } from "../../../lib/utils";
 
 export const Header: React.FC = () => {
   const isMxLoggedIn = useGetIsLoggedIn();
   const { address, balance } = useGetAccount();
   const isSolLoggedIn = useUserStore((state) => state.isSolanaLoggedIn);
+  const solanaBalance = useUserStore((state) => state.solanaBalance);
+  const storePublicKey = useUserStore((state) => state.publicKey);
+  console.log(balance);
+
+  const mvxLogout = logout;
+
+  const handleMvxLogout = () => {
+    clearMvxSessionStorage();
+    mvxLogout("/mvx", undefined, false);
+  };
 
   return (
     <nav className="text-white text-xl bg-gray-600/10">
@@ -24,41 +38,57 @@ export const Header: React.FC = () => {
           </Link>
         </div>
         <div className="flex gap-3">
-          <Link to={"/mvxLogin"}>
-            {isMxLoggedIn ? (
-              <Button className="text-background bg-transparent font-semibold" variant="ghost">
-                {Number(formatAmount({ input: balance })).toFixed(4)} EGLD
-                <Avatar className="w-8 h-8 ml-2">
-                  <AvatarImage src={mvxAvatar} alt="mvxAvatar" />
-                  <AvatarFallback>MVX</AvatarFallback>
-                </Avatar>
-              </Button>
-            ) : (
+          {isMxLoggedIn ? (
+            <DropdownComponent
+              triggerButton={
+                <Button className="text-background bg-transparent font-semibold" variant="ghost">
+                  {Number(formatAmount({ input: balance ?? 0 })).toFixed(3)} EGLD
+                  <Avatar className="w-8 h-8 ml-2">
+                    <AvatarImage src={mvxAvatar} alt="mvxAvatar" />
+                    <AvatarFallback>MVX</AvatarFallback>
+                  </Avatar>
+                </Button>
+              }
+              walletAddress={address}
+              disconnectWallet={handleMvxLogout}
+            />
+          ) : (
+            <Link to={"mvx/mvxLogin"}>
               <Button className="text-background bg-transparent font-semibold" variant="outline">
                 Connect MVX
               </Button>
-            )}
-          </Link>
+            </Link>
+          )}
 
-          <Link to={"/solLogin"}>
-            {isSolLoggedIn ? (
-              <Button className="text-background bg-transparent font-semibold" variant="ghost">
-                <p className="">Connect SOL</p>
-              </Button>
-            ) : (
+          {isSolLoggedIn ? (
+            <DropdownComponent
+              walletAddress={storePublicKey}
+              triggerButton={
+                <Button className="text-background bg-transparent font-semibold" variant="ghost">
+                  {Number(solanaBalance / LAMPORTS_PER_SOL).toFixed(3)} SOL
+                  <Avatar className="w-8 h-8 ml-2">
+                    <AvatarImage src={solAvatar} alt="solAvatar" />
+                    <AvatarFallback>SOL</AvatarFallback>
+                  </Avatar>
+                </Button>
+              }
+              // disconnectWallet={logout("/mvx")}
+            />
+          ) : (
+            <Link to={"sol/solLogin"}>
               <Button className="text-background bg-transparent font-semibold" variant="outline">
                 <p className="">Connect SOL</p>
               </Button>
-            )}
-          </Link>
+            </Link>
+          )}
         </div>
       </div>
       <div className="flex flex-row gap-x-5 justify-left px-9 items-center h-10 border-b border-b-gray-400 font-bold">
-        <NavLink to={"/mvxLogin"} className={({ isActive }) => (isActive ? "bg-slate-700/40" : "bg-transparent")}>
+        <NavLink to={"/mvx"} className={({ isActive }) => (isActive ? "bg-slate-700/40" : "bg-transparent")}>
           <p className="flex justify-center items-center text-teal-400 px-3 h-10">MultiversX</p>
         </NavLink>
 
-        <NavLink to={"/solLogin"} className={({ isActive }) => (isActive ? "bg-slate-700/40" : "bg-transparent")}>
+        <NavLink to={"/sol"} className={({ isActive }) => (isActive ? "bg-slate-700/40" : "bg-transparent")}>
           <p className="flex justify-center items-center bg-gradient-to-r from-violet-500 to-[#5984cd] bg-clip-text text-transparent px-3 h-10">Solana</p>
         </NavLink>
       </div>

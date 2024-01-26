@@ -3,12 +3,14 @@ import { Header } from "./components/Layout/Header";
 import { Content } from "./components/Layout/Content";
 import { Footer } from "./components/Layout/Footer";
 import { Home } from "./pages/Home/Home";
-import { Route, Routes } from "react-router-dom";
-import { UnlockMvx } from "./pages/MultiversXUnlockPage/UnlockMvx";
-import { UnlockSol } from "./pages/SolanaUnlockPage/UnlockSol";
+import { Outlet, Route, Routes } from "react-router-dom";
+import { UnlockMvx } from "./pages/MultiversX/MultiversXUnlockPage/UnlockMvx";
+import { UnlockSol } from "./pages/Solana/SolanaUnlockPage/UnlockSol";
 import { BlockchainWrapper } from "./components/Wrapper/BlockchainWrapper";
-import { SolNfts } from "./pages/SolNfts/SolNfts";
-import { MultiversXNfts } from "./pages/MultiversXNfts/MultiversXNfts";
+import { SolNfts } from "./pages/Solana/SolNfts/SolNfts";
+import { MultiversXNfts } from "./pages/MultiversX/MultiversXNfts/MultiversXNfts";
+import { SolHome } from "./pages/Solana/Home/SolHome";
+import { MvxHome } from "./pages/MultiversX/Home/MvxHome";
 
 function App() {
   return (
@@ -22,10 +24,17 @@ function App() {
             <Content>
               <Routes>
                 <Route path="/" element={<Home />}></Route>
-                <Route path="/mvxLogin" element={<UnlockMvx />}></Route>
-                <Route path="/solLogin" element={<UnlockSol />}></Route>
-                <Route path="/solanaNfts" element={<SolNfts />}></Route>
-                <Route path="/mvxNfts" element={<MultiversXNfts />}></Route>
+
+                <Route path="sol" element={<Outlet />}>
+                  <Route path="" element={<SolHome />} />
+                  <Route path="solLogin" element={<UnlockSol />} />
+                  <Route path="solNfts" element={<SolNfts />} />
+                </Route>
+                <Route path="mvx" element={<Outlet />}>
+                  <Route path="" element={<MvxHome />} />
+                  <Route path="mvxLogin" element={<UnlockMvx />} />
+                  <Route path="mvxNfts" element={<MultiversXNfts />} />
+                </Route>
               </Routes>
             </Content>
           </BlockchainWrapper>

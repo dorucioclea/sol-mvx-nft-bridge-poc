@@ -1,5 +1,5 @@
 import React from "react";
 
-export const DropdownMenu: React.FC = () => {
+export const MvxHome: React.FC = () => {
   return <></>;
 };
