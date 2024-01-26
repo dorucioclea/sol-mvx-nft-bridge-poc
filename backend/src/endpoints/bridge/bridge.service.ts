@@ -107,10 +107,10 @@ export class BridgeService {
 
     const umi = createUmi("https://api.devnet.solana.com");
 
-    const mintPK = []; // private key of minter;
+    const mintPKString = process.env.PRIVATE_KEY;
+    const mintPKArray = mintPKString.split(",").map(Number);
 
-    // -------------------
-    const myMintKeypair = Keypair.fromSecretKey(Uint8Array.from(mintPK));
+    const myMintKeypair = Keypair.fromSecretKey(Uint8Array.from(mintPKArray));
 
     const keypair = umi.eddsa.createKeypairFromSecretKey(myMintKeypair.secretKey);
 
@@ -173,9 +173,12 @@ export class BridgeService {
       timestamp: Math.floor(Date.now() / 1000),
     });
 
-    console.log(tx);
-
-    return HttpStatus.CREATED;
+    this.logger.log(
+      `Transaction ${txHash} processed successfully. Collection created: ${collection.id}, ${
+        collection.tokenIdentifier
+      }, ${collection.nonce}, Solana mint: ${sftKeyPair.publicKey.toString()}  `
+    );
+    return collection;
   }
 
   private mergeAndFilterLogs(response, logIdentifier: String) {
