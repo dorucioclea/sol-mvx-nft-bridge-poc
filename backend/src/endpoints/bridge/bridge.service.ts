@@ -1,5 +1,5 @@
 import { LoggerInitializer } from "@multiversx/sdk-nestjs-common";
-import { Injectable, Logger } from "@nestjs/common";
+import { HttpException, HttpStatus, Injectable, Logger } from "@nestjs/common";
 import { ApiConfigService } from "src/common/api-config/api.config.service";
 import { DataNft } from "@itheum/sdk-mx-data-nft/out";
 import axios from "axios";
@@ -23,17 +23,54 @@ import {
 import { fromWeb3JsKeypair, fromWeb3JsPublicKey } from "@metaplex-foundation/umi-web3js-adapters";
 import { PublicKey } from "@solana/web3.js";
 import { Keypair } from "@solana/web3.js";
-import { receiveMessageOnPort } from "worker_threads";
+import { InjectRepository } from "@nestjs/typeorm";
+import { In, Repository } from "typeorm";
+import { TransactionB } from "./entities/transaction.entity";
+import { CollectionDto } from "./dto/collection.dto";
+import { CollectionB } from "./entities/collection.entity";
+import { TransactionDto } from "./dto/transaction.entity";
 
 @Injectable()
 export class BridgeService {
   private logger = new Logger(BridgeService.name);
-  constructor(private readonly apiConfigService: ApiConfigService) {
+  constructor(
+    private readonly apiConfigService: ApiConfigService,
+    @InjectRepository(CollectionB)
+    private readonly collectionRepository: Repository<CollectionB>,
+    @InjectRepository(TransactionB)
+    private readonly transactionRepository: Repository<TransactionB>
+  ) {
     LoggerInitializer.initialize(this.logger);
   }
 
+  async createCollection(collectionDto: CollectionDto): Promise<CollectionB> {
+    const collection = this.collectionRepository.create(collectionDto);
+    return this.collectionRepository.save(collection);
+  }
+
+  async createTransaction(transactionDto: TransactionDto): Promise<TransactionB> {
+    const transaction = this.transactionRepository.create(transactionDto);
+    return this.transactionRepository.save(transaction);
+  }
+
+  async findCollectionByTokenIdentifierAndNonce(tokenIdentifier: string, nonce: number): Promise<CollectionB> {
+    return this.collectionRepository.findOne({ where: { tokenIdentifier, nonce } });
+  }
+
+  async findTransactionByHash(hash: string): Promise<TransactionB> {
+    return this.transactionRepository.findOne({ where: { txHash: hash } });
+  }
+
+  // process method
+
   async process(txHash: string) {
     DataNft.setNetworkConfig(this.apiConfigService.getItheumSdkEnvironment());
+
+    const alreadyProcessed = await this.findTransactionByHash(txHash);
+
+    if (alreadyProcessed) {
+      return;
+    }
 
     const query = `${this.apiConfigService.getApiUrl()}/transactions?hashes=${txHash}&status=success&withScResults=true&withLogs=true
     `;
@@ -70,7 +107,7 @@ export class BridgeService {
 
     const umi = createUmi("https://api.devnet.solana.com");
 
-    const mintPK = [22, 143]; // private key of minter;
+    const mintPK = []; // private key of minter;
 
     // -------------------
     const myMintKeypair = Keypair.fromSecretKey(Uint8Array.from(mintPK));
@@ -83,33 +120,72 @@ export class BridgeService {
 
     const signerKp = createSignerFromKeypair(umi, fromWeb3JsKeypair(myMintKeypair));
 
-    const nftMint = generateSigner(umi);
-    // store this binded with the tokenIdentifier and nonce from mvx (use this in mints)
+    const collection: CollectionB = await this.findCollectionByTokenIdentifierAndNonce(
+      lockEvent.tokenIdentifier,
+      lockEvent.nonce
+    );
 
     const recipientPubkey = new PublicKey(lockEvent.recipient);
 
-    await createFungibleAsset(umi, {
-      mint: nftMint,
-      name: dataNft.tokenName,
-      uri: lightHouseGateway,
-      sellerFeeBasisPoints: percentAmount(dataNft.royalties),
-      authority: signerKp,
-      creators: [
-        {
-          address: fromWeb3JsPublicKey(recipientPubkey),
-          verified: false,
-          share: 100,
-        },
-      ],
-    }).sendAndConfirm(umi);
+    if (collection) {
+      console.log(collection);
+      const sftPrivateKeyArray = collection.sftPrivateKey.split(",").map(Number);
+      const sftKeyPair = umi.eddsa.createKeypairFromSecretKey(Uint8Array.from(sftPrivateKeyArray));
 
-    await mintV1(umi, {
-      mint: nftMint.publicKey,
-      authority: signerKp,
-      amount: lockEvent.amount,
-      tokenOwner: fromWeb3JsPublicKey(recipientPubkey),
-      tokenStandard: TokenStandard.FungibleAsset,
-    }).sendAndConfirm(umi);
+      await mintV1(umi, {
+        mint: sftKeyPair.publicKey,
+        authority: signerKp,
+        amount: lockEvent.amount,
+        tokenOwner: fromWeb3JsPublicKey(recipientPubkey),
+        tokenStandard: TokenStandard.FungibleAsset,
+      }).sendAndConfirm(umi);
+    } else {
+      const nftMint = generateSigner(umi);
+
+      // store this binded with the tokenIdentifier and nonce from mvx (use this in mints)
+
+      await createFungibleAsset(umi, {
+        mint: nftMint,
+        name: dataNft.tokenName,
+        uri: lightHouseGateway,
+        sellerFeeBasisPoints: percentAmount(isNaN(dataNft.royalties) ? 0 : dataNft.royalties),
+        authority: signerKp,
+        creators: [
+          {
+            address: fromWeb3JsPublicKey(recipientPubkey),
+            verified: false,
+            share: 100,
+          },
+        ],
+      }).sendAndConfirm(umi);
+
+      await mintV1(umi, {
+        mint: nftMint.publicKey,
+        authority: signerKp,
+        amount: lockEvent.amount,
+        tokenOwner: fromWeb3JsPublicKey(recipientPubkey),
+        tokenStandard: TokenStandard.FungibleAsset,
+      }).sendAndConfirm(umi);
+
+      const collectionDto: CollectionDto = {
+        tokenIdentifier: lockEvent.tokenIdentifier,
+        nonce: lockEvent.nonce,
+        sftPrivateKey: Array.from(nftMint.secretKey).join(","),
+      };
+
+      const storedCollection = await this.createCollection(collectionDto);
+
+      if (!storedCollection) {
+        throw new HttpException("Error storing collection", HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+    }
+
+    await this.createTransaction({
+      txHash: txHash,
+      timestamp: Math.floor(Date.now() / 1000),
+    });
+
+    return HttpStatus.CREATED;
   }
 
   private mergeAndFilterLogs(response, logIdentifier: String) {
@@ -134,7 +210,7 @@ export class BridgeService {
       "name": `${dataNft.tokenName}`,
       "symbol": `${dataNft.collection}`,
       "description": `${dataNft.description}`,
-      "seller_fee_basis_points": `${dataNft.royalties}`,
+      "seller_fee_basis_points": `${isNaN(dataNft.royalties) ? 0 : dataNft.royalties}`,
       "image": `${dataNft.nftImgUrl}`,
       "animation_url": "",
       "external_url": "",
