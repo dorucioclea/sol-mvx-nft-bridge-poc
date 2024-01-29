@@ -8,7 +8,6 @@ import { WINSTON_MODULE_NEST_PROVIDER } from "nest-winston";
 import { join } from "path";
 import { ApiConfigService } from "./common/api-config/api.config.service";
 import { PublicAppModule } from "./public.app.module";
-
 import { LoggerInitializer } from "@multiversx/sdk-nestjs-common";
 
 async function bootstrap() {

@@ -10,3 +10,20 @@ export function replaceLastSegment(url, newSegment) {
 
   return modifiedUrl;
 }
+
+export function returnAPIEndpoint(chainId: string) {
+  let api = "";
+
+  switch (chainId) {
+    case "E1":
+    case "1":
+      api = "https://api.multiversx.com";
+      break;
+    case "ED":
+    case "D":
+      api = "https://devnet-api.multiversx.com";
+      break;
+  }
+
+  return api;
+}
