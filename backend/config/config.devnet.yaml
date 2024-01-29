@@ -1,7 +1,7 @@
 urls:
   api: "https://devnet-api.multiversx.com"
   swagger:
-    - "http://localhost:3000"
+    - "https://sol-mvx-nft-bridge-poc-production.up.railway.app"
 itheumSdk.environment: "devnet"
 api:
   auth: true
@@ -15,6 +15,7 @@ nativeAuth:
   maxExpirySeconds:
   acceptedOrigins:
     - "http://localhost:3000"
+    - "https://localhost:3000"
 rateLimiterSecret:
 keepAliveTimeout:
   downstream: 61000
