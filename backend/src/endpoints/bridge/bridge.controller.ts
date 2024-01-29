@@ -23,4 +23,19 @@ export class BridgeController {
   async process(@Body("txHash") txHash: string, @NativeAuth("address") address: string) {
     await this.bridgeService.process(txHash, address);
   }
+
+  @Post("/process_back")
+  @ApiBody({
+    schema: {
+      type: "object",
+      properties: {
+        tokenAddress: {
+          type: "string",
+        },
+      },
+    },
+  })
+  async process_back(@Body("tokenAddress") tokenAddress: string) {
+    return "ok";
+  }
 }

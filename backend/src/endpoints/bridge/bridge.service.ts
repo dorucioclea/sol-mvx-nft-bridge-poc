@@ -8,7 +8,13 @@ import { ApiConfigService } from "src/common/api-config/api.config.service";
 import { replaceLastSegment } from "src/utils";
 import { LockEvent } from "./bridge.interfaces";
 
-import { TokenStandard, createFungibleAsset, mintV1, mplTokenMetadata } from "@metaplex-foundation/mpl-token-metadata";
+import {
+  TokenStandard,
+  burnV1,
+  createFungibleAsset,
+  mintV1,
+  mplTokenMetadata,
+} from "@metaplex-foundation/mpl-token-metadata";
 import { createSignerFromKeypair, generateSigner, keypairIdentity, percentAmount } from "@metaplex-foundation/umi";
 import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
 import { fromWeb3JsKeypair, fromWeb3JsPublicKey } from "@metaplex-foundation/umi-web3js-adapters";
@@ -99,7 +105,7 @@ export class BridgeService {
 
     // solana
 
-    const umi = createUmi("https://api.devnet.solana.com");
+    const umi = createUmi(`https://rpc.ironforge.network/devnet?apiKey=${process.env.IRON_FORGE_API_KEY}`);
 
     const mintPKString = process.env.PRIVATE_KEY;
     const mintPKArray = mintPKString.split(",").map(Number);
