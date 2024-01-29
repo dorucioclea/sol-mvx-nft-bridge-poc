@@ -1,3 +1,10 @@
+import { AbiRegistry, BinaryCodec } from "@multiversx/sdk-core/out";
+import { X25519EncryptedData } from "@multiversx/sdk-wallet/out/crypto/x25519EncryptedData";
+import { HttpException, HttpStatus } from "@nestjs/common";
+import { hookGetSecretKeyContent } from "./hooks";
+import { PubkeyDecryptor, PubkeyEncryptor } from "@multiversx/sdk-wallet/out/crypto";
+import { UserSecretKey } from "@multiversx/sdk-wallet/out/";
+
 export function replaceLastSegment(url, newSegment) {
   // Split the URL by '/'
   const parts = url.split("/");
@@ -26,4 +33,87 @@ export function returnAPIEndpoint(chainId: string) {
   }
 
   return api;
+}
+
+export function hydrateEncryptedMessage(encryptedMessage: any) {
+  // temp solution to support old payloads until we reboot the smart contract @TODO remove
+  if (!encryptedMessage["A"] || typeof encryptedMessage["A"] === "undefined") {
+    return encryptedMessage;
+  }
+
+  // step 1 - swap back fake key names to real key names + add non-essential constant props back
+  const swappedBackPropNamePayload = {
+    version: 1,
+    nonce: encryptedMessage["A"],
+    identities: {
+      // recipient: encryptedMessage['B'],
+      ephemeralPubKey: encryptedMessage["B"],
+      originatorPubKey: encryptedMessage["C"],
+    },
+    crypto: {
+      ciphertext: encryptedMessage["D"],
+      cipher: "x25519-xsalsa20-poly1305",
+      mac: encryptedMessage["E"],
+    },
+  };
+
+  return swappedBackPropNamePayload;
+}
+
+export function dehydrateEncryptedMessage(encryptedData: any) {
+  // step 1 - swap key names to hide real key name + remove non-essential props from encryptedData
+  const swappedPropNamePayload: any = {};
+  swappedPropNamePayload["A"] = encryptedData["nonce"];
+  // swappedPropNamePayload['B'] = encryptedData['identities']['recipient']; // not needed for decrypt as per MX comment
+  swappedPropNamePayload["B"] = encryptedData["identities"]["ephemeralPubKey"];
+  swappedPropNamePayload["C"] = encryptedData["identities"]["originatorPubKey"];
+  swappedPropNamePayload["D"] = encryptedData["crypto"]["ciphertext"];
+  swappedPropNamePayload["E"] = encryptedData["crypto"]["mac"];
+
+  return Buffer.from(JSON.stringify(swappedPropNamePayload)).toString("base64");
+}
+
+export async function decryptDataStreamUrl(decryptDataStreamUrlParam: {
+  onChainNFTPayload: { dataStream: string };
+  errCodePrefix: string;
+}): Promise<string> {
+  const { onChainNFTPayload, errCodePrefix } = decryptDataStreamUrlParam;
+
+  const encryptedMessageToString = Buffer.from(onChainNFTPayload.dataStream, "base64").toString("ascii");
+
+  const encryptedData = X25519EncryptedData.fromJSON(hydrateEncryptedMessage(JSON.parse(encryptedMessageToString)));
+  try {
+    const decryptedDataBuffer = await decryptData(encryptedData);
+    return decryptedDataBuffer.toString();
+  } catch (e: any) {
+    if (e.message?.toLowerCase().indexOf("failed authentication") > -1) {
+      throw new HttpException(`${errCodePrefix}-1-CR: Decryption service has failed`, HttpStatus.PRECONDITION_FAILED);
+    } else {
+      throw new HttpException(
+        `${errCodePrefix}-2-CR: Decryption service has failed - ${e.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+}
+
+export async function decryptData(data: X25519EncryptedData): Promise<Buffer> {
+  const secretKey = await getSecretKeyFromPemFilePath();
+  const decryptedData = PubkeyDecryptor.decrypt(data, secretKey);
+  return decryptedData;
+}
+
+async function getSecretKeyFromPemFilePath(): Promise<UserSecretKey> {
+  const fileContent = await hookGetSecretKeyContent();
+  const userWallet = UserSecretKey.fromPem(fileContent); // 1
+  return userWallet;
+}
+
+export async function encryptData(data: string): Promise<X25519EncryptedData> {
+  const secretKey = await getSecretKeyFromPemFilePath();
+  const publicKey = secretKey.generatePublicKey();
+
+  const encryptedData = PubkeyEncryptor.encrypt(Buffer.from(data), publicKey, secretKey);
+
+  return encryptedData;
 }
