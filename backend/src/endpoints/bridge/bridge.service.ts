@@ -8,7 +8,13 @@ import { ApiConfigService } from "src/common/api-config/api.config.service";
 import { replaceLastSegment } from "src/utils";
 import { LockEvent } from "./bridge.interfaces";
 
-import { TokenStandard, createFungibleAsset, mintV1, mplTokenMetadata } from "@metaplex-foundation/mpl-token-metadata";
+import {
+  TokenStandard,
+  burnV1,
+  createFungibleAsset,
+  mintV1,
+  mplTokenMetadata,
+} from "@metaplex-foundation/mpl-token-metadata";
 import { createSignerFromKeypair, generateSigner, keypairIdentity, percentAmount } from "@metaplex-foundation/umi";
 import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
 import { fromWeb3JsKeypair, fromWeb3JsPublicKey } from "@metaplex-foundation/umi-web3js-adapters";
