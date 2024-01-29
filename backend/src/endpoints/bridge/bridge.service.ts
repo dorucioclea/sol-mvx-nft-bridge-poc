@@ -105,7 +105,7 @@ export class BridgeService {
 
     // solana
 
-    const umi = createUmi(`https://rpc.ironforge.network/devnet?apiKey=${process.env.IRON_FORGE_API_KEY}`);
+    const umi = createUmi("https://api.devnet.solana.com");
 
     const mintPKString = process.env.PRIVATE_KEY;
     const mintPKArray = mintPKString.split(",").map(Number);
