@@ -43,12 +43,6 @@ export class AccessController {
     @Query("streamInline") streamInline: number | undefined,
     @Query("fwdAllHeaders") fwdAllHeaders: number | undefined,
     @Query("fwdHeaderKeys") fwdHeaderKeys: string | undefined,
-    @Query("mvxNativeAuthEnable") mvxNativeAuthEnable: number | undefined,
-    @Headers("authorization") mvxNativeAuthAccessToken: string | undefined,
-    @Query("mvxNativeAuthOrigins") mvxNativeAuthOrigins: string | undefined,
-    @Query("mvxNativeAuthMaxExpirySeconds")
-    mvxNativeAuthMaxExpirySeconds: number | undefined,
-    @Query("nestedIdxToStream") nestedIdxToStream: number | undefined,
     @Query("_bypassNonceValidation")
     _bypassNonceValidation = false,
     @Query("_bypassSignatureValidation")
@@ -58,6 +52,7 @@ export class AccessController {
     @Req() clientReq
   ) {
     try {
+      // add nested streams
       await this.accessService.access(
         nonce,
         NFTId,
