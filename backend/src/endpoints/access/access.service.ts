@@ -1,4 +1,4 @@
-import { Address, SignableMessage } from "@multiversx/sdk-core/out";
+import { Address } from "@multiversx/sdk-core/out";
 import { HttpException, HttpStatus, Injectable, Logger } from "@nestjs/common";
 import axios from "axios";
 import { decryptDataStreamUrl, returnAPIEndpoint } from "src/utils";
@@ -412,14 +412,14 @@ export class AccessService {
         remoteStream.push(null); // Signal the end of the stream
       }
 
-      try {
-        const erdAddress = new Address(accessRequesterAddr);
-        const accessRequesterAddrInBech32 = erdAddress.bech32();
+      // try {
+      //   const erdAddress = new Address(accessRequesterAddr);
+      //   const accessRequesterAddrInBech32 = erdAddress.bech32();
 
-        // await hookReportStatusIssues(remoteResponse.status.toString(), NFTId, accessRequesterAddrInBech32);
-      } catch (e) {
-        console.log(e);
-      }
+      //   // await hookReportStatusIssues(remoteResponse.status.toString(), NFTId, accessRequesterAddrInBech32);
+      // } catch (e) {
+      //   console.log(e);
+      // }
 
       let isContentDispositionAttachment = true;
       const resPipeHeaders: any = {};
