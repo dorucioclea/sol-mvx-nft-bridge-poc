@@ -105,7 +105,7 @@ export class BridgeService {
 
     // solana
 
-    const umi = createUmi("https://api.devnet.solana.com");
+    const umi = createUmi(process.env.SOLANA_API_KEY);
 
     const mintPKString = process.env.PRIVATE_KEY;
     const mintPKArray = mintPKString.split(",").map(Number);
@@ -150,6 +150,8 @@ export class BridgeService {
       };
 
       const storedCollection = await this.createCollection(collectionDto);
+
+      console.log(storedCollection);
 
       if (!storedCollection) {
         throw new HttpException("Error storing collection", HttpStatus.INTERNAL_SERVER_ERROR);
