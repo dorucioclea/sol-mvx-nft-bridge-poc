@@ -73,7 +73,7 @@ export class BridgeService {
 
     const response = await axios.get(query);
 
-    if (response.data.sender != address) {
+    if (response.data[0].sender != address) {
       throw new HttpException("Not authorized", HttpStatus.UNAUTHORIZED);
     }
 
