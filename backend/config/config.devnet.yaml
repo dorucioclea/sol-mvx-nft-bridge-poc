@@ -1,7 +1,6 @@
 urls:
   api: "https://devnet-api.multiversx.com"
   swagger:
-    - "http://localhost:3000"
     - "https://sol-mvx-nft-bridge-poc-production.up.railway.app"
 itheumSdk.environment: "devnet"
 api:
