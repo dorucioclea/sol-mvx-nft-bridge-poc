@@ -8,8 +8,8 @@ import solAvatar from "../../assets/solAvatar.png";
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
 import { useUserStore } from "../../store/user";
 import { DropdownComponent } from "../DropdownMenu/DropdownComponent";
-import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
-import { clearMvxSessionStorage, clearSolSessionStorage, getProvider, getWalletBalance } from "../../../lib/utils";
+import { LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { clearMvxSessionStorage, clearSolSessionStorage, getProvider } from "../../../lib/utils";
 
 export const Header: React.FC = () => {
   const isMxLoggedIn = useGetIsLoggedIn();
@@ -20,7 +20,7 @@ export const Header: React.FC = () => {
   const storePublicKey = useUserStore((state) => state.publicKey);
   const provider = getProvider();
 
-  // console.log(balance);
+  console.log(provider);
 
   const mvxLogout = logout;
 
@@ -28,9 +28,9 @@ export const Header: React.FC = () => {
     if (!provider) return;
     try {
       const resp = await provider.disconnect();
-      console.log(resp.publicKey.toString());
+      // console.log(resp.publicKey.toString());
     } catch (err) {
-      console.log("User rejected the request.");
+      console.log("User rejected the request.", err);
     }
   };
 

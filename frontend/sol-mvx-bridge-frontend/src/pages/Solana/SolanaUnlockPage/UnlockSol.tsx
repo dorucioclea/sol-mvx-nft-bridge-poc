@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo } from "react";
 import { Button } from "../../../ui/button";
-import { getProvider, getWalletBalance } from "../../../../lib/utils";
+import { getProvider } from "../../../../lib/utils";
 import { useUserStore } from "../../../store/user";
 import { PublicKey } from "@solana/web3.js";
 import { useNavigate } from "react-router-dom";
@@ -43,7 +43,7 @@ export const UnlockSol: React.FC = () => {
       updatePublicKey(publicKey.toString());
       updateIsSolanaLoggedIn(true);
       localStorage.setItem("solanaPublicKey", publicKey.toString());
-      navigate("/sol/solanaNfts");
+      navigate("/sol/solNfts");
     });
     provider.on("disconnect", () => {
       updatePublicKey("");

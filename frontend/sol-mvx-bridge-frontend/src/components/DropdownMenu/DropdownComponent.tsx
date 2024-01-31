@@ -29,11 +29,9 @@ export const DropdownComponent: React.FC<DropdownComponentProps> = (props) => {
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuGroup>
-          <DropdownMenuItem>
-            <Button className="text-rose-600 cursor-pointer" onClick={disconnectWallet} variant="ghost">
-              Disconnect
-            </Button>
-          </DropdownMenuItem>
+          <Button className="text-rose-600 cursor-pointer" onClick={disconnectWallet} variant="ghost">
+            Disconnect
+          </Button>
         </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
