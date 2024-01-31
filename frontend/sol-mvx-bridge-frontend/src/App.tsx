@@ -13,6 +13,7 @@ import { SolHome } from "./pages/Solana/Home/SolHome";
 import { MvxHome } from "./pages/MultiversX/Home/MvxHome";
 import { Bridge } from "./pages/Bridge/Bridge";
 import { StoreProvider } from "./store/StoreProvider";
+import { SolInventory } from "./pages/Solana/SolInventory/SolInventory";
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
                     <Route path="" element={<SolHome />} />
                     <Route path="solLogin" element={<UnlockSol />} />
                     <Route path="solNfts" element={<SolNfts />} />
+                    <Route path="solInventory" element={<SolInventory />} />
                   </Route>
                   <Route path="mvx" element={<Outlet />}>
                     <Route path="" element={<MvxHome />} />

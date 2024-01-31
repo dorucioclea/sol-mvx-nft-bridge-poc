@@ -1,7 +1,7 @@
 import React, { JSX, useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
-import { LedgerWalletAdapter, MathWalletAdapter, PhantomWalletAdapter, SolflareWalletAdapter } from "@solana/wallet-adapter-wallets";
+import { PhantomWalletAdapter, SolflareWalletAdapter } from "@solana/wallet-adapter-wallets";
 import { clusterApiUrl } from "@solana/web3.js";
 import { Home } from "../../pages/Home/Home";
 import { apiTimeout, walletConnectV2ProjectId } from "../../config";
@@ -39,6 +39,9 @@ export const BlockchainWrapper: React.FC<BlockchainWrapperProps> = (props) => {
   const isSol = () => {
     return pathname === "/sol";
   };
+  const isBridge = () => {
+    return pathname === "/bridge";
+  };
 
   useEffect(() => {
     if (isMvx()) {
@@ -69,8 +72,29 @@ export const BlockchainWrapper: React.FC<BlockchainWrapperProps> = (props) => {
           </WalletProvider>
         </ConnectionProvider>
       );
-    } else {
-      setContextComponent(<>{children}</>);
+    } else if (isBridge()) {
+      console.log("bridge", isBridge());
+
+      setContextComponent(
+        <DappProvider
+          environment={"devnet"}
+          customNetworkConfig={{
+            name: "customConfig",
+            apiTimeout,
+            walletConnectV2ProjectId,
+          }}>
+          <TransactionsToastList successfulToastLifetime={1000} customToastClassName="absolute" />
+          <NotificationModal />
+          <SignTransactionsModals className="custom-class-for-modals" />
+          <AuthenticatedRoutesWrapper routes={routes} unlockRoute="/unlock">
+            <ConnectionProvider endpoint={endpoint}>
+              <WalletProvider wallets={wallets}>
+                <WalletModalProvider>{children}</WalletModalProvider>
+              </WalletProvider>
+            </ConnectionProvider>
+          </AuthenticatedRoutesWrapper>
+        </DappProvider>
+      );
     }
   }, [pathname]);
 

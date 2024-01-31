@@ -49,6 +49,7 @@ export const Header: React.FC = () => {
                   </Avatar>
                 </Button>
               }
+              pathToRedirect={"/mvx/mvxInventory"}
               walletAddress={address}
               disconnectWallet={handleMvxLogout}
             />
@@ -72,6 +73,7 @@ export const Header: React.FC = () => {
                   </Avatar>
                 </Button>
               }
+              pathToRedirect={"/sol/solInventory"}
               // disconnectWallet={logout("/mvx")}
             />
           ) : (

@@ -11,3 +11,8 @@
 .backgroundCircle1 {
   @apply absolute xl:top-[40dvh] top-[43%] xl:left-[45%] left-1/3 -z-0 w-[19svh] h-[19svh] bg-[#1b1b1b] rounded-full shadow-2xl shadow-teal-300 backdrop-blur;
 }
+
+.dapp-core-component__transactionsToastList-styles__toasts.dapp-core-component__transactionsToastList-styles__toastWrapper,
+.dapp-core-component__dappModalStyles__dappModalBody{
+  @apply bg-[#1b1b1b] text-foreground !important;
+}
