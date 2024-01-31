@@ -112,6 +112,8 @@ export class BridgeService {
 
     const myMintKeypair = Keypair.fromSecretKey(Uint8Array.from(mintPKArray));
 
+    console.log(myMintKeypair.publicKey.toString());
+
     const keypair = umi.eddsa.createKeypairFromSecretKey(myMintKeypair.secretKey);
 
     const signerKp = createSignerFromKeypair(umi, fromWeb3JsKeypair(myMintKeypair));

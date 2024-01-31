@@ -27,6 +27,9 @@ export class AccessService {
     fwdAllHeaders: number | undefined,
     fwdHeaderKeys: string | undefined,
 
+    // nested stream
+    nestedIdxToStream: number | undefined,
+
     // bypasses
     _bypassNonceValidation: boolean,
     _bypassSignatureValidation: boolean,
@@ -87,6 +90,7 @@ export class AccessService {
         streamInline,
         fwdAllHeaders,
         fwdHeaderKeys,
+        nestedIdxToStream,
       };
 
       await this.streamOutData(
@@ -105,6 +109,101 @@ export class AccessService {
         throw new HttpException("MA-1-3-CR: unspecified execution error on catch", HttpStatus.INTERNAL_SERVER_ERROR);
       }
     }
+  }
+
+  processNestedStream(methodParams: {
+    clientStreamConfig: any;
+    NFTId: string;
+    chainId: string;
+    accessRequesterAddr: string;
+    remoteStream: any;
+    clientRes: any;
+    clientReq: any;
+  }) {
+    const { clientStreamConfig, NFTId, chainId, accessRequesterAddr, remoteStream, clientRes, clientReq } =
+      methodParams;
+
+    return new Promise<void>(async (resolve, reject) => {
+      try {
+        let dataString = "";
+
+        remoteStream.on("data", (data: any) => {
+          try {
+            dataString += data;
+          } catch (e) {
+            console.log("processNestedStream: ERR Catch 1 hit");
+            reject(
+              new HttpException("MA-X-X-CR: Nested Streaming processing failed", HttpStatus.INTERNAL_SERVER_ERROR)
+            );
+          }
+        });
+
+        remoteStream.on("end", async () => {
+          try {
+            const payload = JSON.parse(dataString);
+
+            console.log("processNestedStream: nestedIdxToStream = ", clientStreamConfig.nestedIdxToStream);
+
+            console.log("processNestedStream: payload.data length = ", payload.data.length);
+
+            if (typeof clientStreamConfig.nestedIdxToStream !== "undefined") {
+              // match the item the user has asked for...
+              const itemToStream = payload.data.find(
+                (i: any) => parseInt(i.idx, 10) === parseInt(clientStreamConfig.nestedIdxToStream, 10)
+              );
+
+              if (itemToStream) {
+                const deepDataNFTStreamUrl = itemToStream.file;
+
+                console.log(deepDataNFTStreamUrl);
+                await this.streamOutData(
+                  clientStreamConfig,
+                  NFTId,
+                  chainId,
+                  deepDataNFTStreamUrl,
+                  accessRequesterAddr,
+                  clientRes,
+                  clientReq
+                );
+              } else {
+                console.log(
+                  "processNestedStream: MA-9-1: nestedIdxToStream is not matching an item in the data stream. Did you go too high or too low?"
+                );
+                clientRes.status(400).json({
+                  error:
+                    "MA-9-1: nestedIdxToStream is not matching an item in the data stream. Did you go too high or too low?",
+                });
+              }
+            } else {
+              const fixedPayload = { ...payload };
+              // we iterate through the originalData and remove the "file" as they are private in nested stream
+              fixedPayload.data = fixedPayload.data.map((item: any) => {
+                const newItem = { ...item };
+                delete newItem.file;
+                return newItem;
+              });
+
+              console.log(
+                "processNestedStream: nestedIdxToStream not provided. Filter out file links and send full payload"
+              );
+
+              clientRes.status(200).json(fixedPayload);
+              resolve();
+            }
+          } catch (e) {
+            console.log("processNestedStream: ERR Catch 2 hit");
+
+            reject(
+              new HttpException("MA-X-X-CR: Nested Streaming processing failed", HttpStatus.INTERNAL_SERVER_ERROR)
+            );
+          }
+        });
+      } catch (e) {
+        console.log("processNestedStream: ERR Catch 3 hit");
+
+        reject(new HttpException("MA-X-X-CR: Nested Streaming processing failed", HttpStatus.INTERNAL_SERVER_ERROR));
+      }
+    });
   }
 
   async validateNonce(
@@ -348,13 +447,14 @@ export class AccessService {
     clientStreamConfig: any,
     NFTId: string,
     chainId: string,
-    decryptedDataStreamURL: string,
+    dataNFTStreamUrl: string,
     accessRequesterAddr: string,
     clientRes: any,
     clientReq: any
   ): Promise<void> {
-    try {
-      /*
+    return new Promise<void>(async (resolve, reject) => {
+      try {
+        /*
       HEADER FWDs: we setup custom Marshal Headers AND forward client sent headers to Origin server
       ... so origin can handle any client specific logic (e.g. auth) or personalization before responding with Data Stream
       ... design choice was made to let client to explicitly request FWD all clientReq.headers (via the fwdHeaderKeys param) 
@@ -369,116 +469,165 @@ export class AccessService {
       ... to customize personal data, should also not be possible as NFTId is being validated against the wallet (caller) in prev steps
       */
 
-      console.log("All request Headers ------ S");
-      console.log(JSON.stringify(clientReq.headers));
-      console.log("All request Headers ------ E");
+        console.log("All request Headers ------ S");
+        console.log(JSON.stringify(clientReq.headers));
+        console.log("All request Headers ------ E");
 
-      let forwardRequestHeaders: any = {
-        "itm-marshal-fwd-chainid": chainId,
-        "itm-marshal-fwd-tokenid": NFTId,
-      };
-
-      console.log("clientStreamConfig", clientStreamConfig);
-
-      if (clientStreamConfig?.fwdHeaderKeys) {
-        // client wants selected headers to be forwarded
-        forwardRequestHeaders = {
-          ...forwardRequestHeaders,
+        let forwardRequestHeaders: any = {
+          "itm-marshal-fwd-chainid": chainId,
+          "itm-marshal-fwd-tokenid": NFTId,
         };
 
-        // loop through the headers the client wanted to fwd and append them to forwardRequestHeaders
-        clientStreamConfig.fwdHeaderKeys.split(",").map((headerKey: string) => {
-          forwardRequestHeaders[headerKey] = clientReq.headers[headerKey];
-        });
-      } else if (clientStreamConfig?.fwdAllHeaders == 1) {
-        // OR client wants to forward all headers to the origin
-        forwardRequestHeaders = {
-          ...forwardRequestHeaders,
-          ...clientReq.headers,
-        };
-      }
+        console.log("clientStreamConfig", clientStreamConfig);
 
-      console.log("Final forwardRequestHeaders +++++ S");
-      console.log(JSON.stringify(forwardRequestHeaders));
-      console.log("Final forwardRequestHeaders +++++ E");
+        if (clientStreamConfig?.fwdHeaderKeys) {
+          // client wants selected headers to be forwarded
+          forwardRequestHeaders = {
+            ...forwardRequestHeaders,
+          };
 
-      const remoteResponse = await axios.get(decryptedDataStreamURL, {
-        responseType: "stream",
-        headers: forwardRequestHeaders,
-      });
-
-      let remoteStream: Readable;
-      if (remoteResponse.data instanceof Readable) {
-        remoteStream = remoteResponse.data;
-      } else {
-        remoteStream = new Readable();
-        remoteStream.push(remoteResponse.data);
-        remoteStream.push(null); // Signal the end of the stream
-      }
-
-      // try {
-      //   const erdAddress = new Address(accessRequesterAddr);
-      //   const accessRequesterAddrInBech32 = erdAddress.bech32();
-
-      //   // await hookReportStatusIssues(remoteResponse.status.toString(), NFTId, accessRequesterAddrInBech32);
-      // } catch (e) {
-      //   console.log(e);
-      // }
-
-      let isContentDispositionAttachment = true;
-      const resPipeHeaders: any = {};
-
-      if (remoteResponse.headers["content-length"]) {
-        resPipeHeaders["content-length"] = remoteResponse.headers["content-length"];
-      }
-
-      if (remoteResponse.headers["content-type"]) {
-        resPipeHeaders["content-type"] = remoteResponse.headers["content-type"];
-      }
-
-      if (remoteResponse.headers["x-datacattype"]) {
-        resPipeHeaders["x-datacattype"] = remoteResponse.headers["x-datacattype"];
-        isContentDispositionAttachment = false;
-      }
-
-      if (clientStreamConfig?.streamInline) {
-        isContentDispositionAttachment = false;
-        resPipeHeaders["x-sdk-inline"] = "true";
-      }
-
-      if (remoteResponse.headers["x-cache"]) {
-        resPipeHeaders["x-cache"] = remoteResponse.headers["x-cache"];
-      }
-
-      if (isContentDispositionAttachment) {
-        try {
-          const originFilename = new URL(decryptedDataStreamURL).pathname.split("/").pop();
-
-          if (originFilename !== undefined && originFilename.length > 4 && originFilename.includes(".")) {
-            resPipeHeaders["content-disposition"] = `attachment;filename=${originFilename}`;
-          } else {
-            if (remoteResponse.headers["content-type"].includes("html")) {
-              resPipeHeaders["content-disposition"] = "inline";
-              resPipeHeaders["x-clouddoc"] = "1";
-            } else {
-              resPipeHeaders["content-disposition"] = "inline";
-            }
-          }
-        } catch (e) {
-          resPipeHeaders["content-disposition"] = "inline";
+          // loop through the headers the client wanted to fwd and append them to forwardRequestHeaders
+          clientStreamConfig.fwdHeaderKeys.split(",").map((headerKey: string) => {
+            forwardRequestHeaders[headerKey] = clientReq.headers[headerKey];
+          });
+        } else if (clientStreamConfig?.fwdAllHeaders == 1) {
+          // OR client wants to forward all headers to the origin
+          forwardRequestHeaders = {
+            ...forwardRequestHeaders,
+            ...clientReq.headers,
+          };
         }
-      } else {
-        resPipeHeaders["content-disposition"] = "inline";
+
+        console.log("streamOutData: Final forwardRequestHeaders +++++ S");
+        console.log(JSON.stringify(forwardRequestHeaders));
+        console.log("streamOutData: Final forwardRequestHeaders +++++ E");
+
+        const remoteResponse = await axios.get(dataNFTStreamUrl, {
+          responseType: "stream",
+          headers: forwardRequestHeaders,
+        });
+
+        let remoteStream: Readable;
+        if (remoteResponse.data instanceof Readable) {
+          remoteStream = remoteResponse.data;
+        } else {
+          remoteStream = new Readable();
+          remoteStream.push(remoteResponse.data);
+          remoteStream.push(null); // Signal the end of the stream
+        }
+
+        // try {
+        //   const erdAddress = new Address(accessRequesterAddr);
+        //   const accessRequesterAddrInBech32 = erdAddress.bech32();
+
+        //   await hookReportStatusIssues(remoteResponse.status, NFTId, accessRequesterAddrInBech32);
+        // } catch (e) {
+        //   await hookReportBugsToExternalService(
+        //     this.logger,
+        //     500,
+        //     new Error("MA-6-3: hookReportStatusIssues threw an error but we continue.")
+        //   );
+        // }
+
+        let isContentDispositionAttachment = true;
+        const resPipeHeaders: any = {};
+
+        let deepFetchMode = false;
+
+        if (
+          remoteResponse.headers["x-amz-meta-marshal-deep-fetch"] &&
+          remoteResponse.headers["x-amz-meta-marshal-deep-fetch"] === "1"
+        ) {
+          deepFetchMode = true;
+        }
+
+        if (!deepFetchMode) {
+          if (remoteResponse.headers["content-length"]) {
+            resPipeHeaders["content-length"] = remoteResponse.headers["content-length"];
+          }
+          if (remoteResponse.headers["content-type"]) {
+            resPipeHeaders["content-type"] = remoteResponse.headers["content-type"];
+          }
+
+          if (remoteResponse.headers["x-datacattype"]) {
+            resPipeHeaders["x-datacattype"] = remoteResponse.headers["x-datacattype"];
+            isContentDispositionAttachment = false;
+          }
+
+          // Itheum SDKs can also allow for programmatic access to Data Marshal, and in that case we want the response to be 'inline'
+          // ... so the host app can capture the response in a API call and then work with the results in code
+          if (clientStreamConfig?.streamInline) {
+            // streamInline can be 1 or anything besides undefined (ideally 1)
+            isContentDispositionAttachment = false;
+            resPipeHeaders["x-sdk-inline"] = "true";
+          }
+
+          // Data CAT stream or other supported live streams can also include x-cache to indicate caching policy of origin
+          if (remoteResponse.headers["x-cache"]) {
+            resPipeHeaders["x-cache"] = remoteResponse.headers["x-cache"];
+          }
+
+          if (isContentDispositionAttachment) {
+            // set content-disposition to attachment so file is downloaded automatically
+            // getting filename may not always work, so try it and then set content-disposition
+            try {
+              const originFilename = new URL(dataNFTStreamUrl).pathname.split("/").pop();
+              // simple check for a . and at least 4 chars.. e.g e.csv
+              if (originFilename !== undefined && originFilename.length > 4 && originFilename.includes(".")) {
+                resPipeHeaders["content-disposition"] = `attachment;filename=${originFilename}`;
+              } else {
+                // cloud docs like google drive files (note that google docs support may be turned off at UI layer) are usually HTML
+                // ... but wont have a .html ending so it will come into this code block
+                // ... we should treat these files a Streams or other supported live streams (i.e. open in a new tab)
+                // ... we should only apply it here as if the user is actually trying to mint a raw HTML file
+                // ... then we should download it via content-disposition attachment
+                if (remoteResponse.headers["content-type"].includes("html")) {
+                  // cloud docs like google drive docs have "text/html; charset=utf-8" content type
+                  resPipeHeaders["content-disposition"] = "inline";
+                  resPipeHeaders["x-clouddoc"] = "1"; // a flag to indicate it's most likely a cloud document so UX in front end can change
+                } else {
+                  resPipeHeaders["content-disposition"] = "inline"; // for NOW; treat everything else as a 'inline' as well
+                }
+              }
+            } catch (e) {
+              resPipeHeaders["content-disposition"] = "inline"; // default to 'inline' in case of any errors in above logic block
+            }
+          } else {
+            // as it's a Data CAT stream or other supported live stream, we don't want to try and download it or reload current browser page
+            // ... in the UI, we will check and open a new page based on this (and x-datacattype) header
+            resPipeHeaders["content-disposition"] = "inline";
+          }
+
+          clientRes.set(resPipeHeaders);
+
+          remoteStream.pipe(clientRes);
+
+          return;
+        } else {
+          await this.processNestedStream({
+            clientStreamConfig,
+            NFTId,
+            chainId,
+            accessRequesterAddr,
+            remoteStream,
+            clientRes,
+            clientReq,
+          });
+        }
+      } catch (e) {
+        if (e instanceof HttpException) {
+          // if a inline function like processNestedStream threw an error then we just pass that on with it's details
+          reject(e);
+        } else {
+          reject(
+            new HttpException(
+              `MA-6-1-CR: Streaming out of data failed. Details = [${e?.message} ]`,
+              HttpStatus.INTERNAL_SERVER_ERROR
+            )
+          );
+        }
       }
-
-      clientRes.set(resPipeHeaders);
-
-      remoteStream.pipe(clientRes);
-
-      return;
-    } catch (e) {
-      throw new HttpException("MA-6-1-CR: Streaming out of data failed", HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+    });
   }
 
   _validateSpecificParams(
