@@ -42,7 +42,7 @@ export const Bridge: React.FC = () => {
       const { data } = await axios.post(
         url,
         {
-          txHash: "a9ef12285c1b98acd5f4172c817c8e5062f23beb0844c4f77ac897df07d8d3d9",
+          txHash: "33a9ee31462757a81e8d8d15ac40dc9a58146fc7dd645b5297a053410165b4dc",
         },
         {
           headers: {
@@ -89,6 +89,14 @@ export const Bridge: React.FC = () => {
       fetchData();
     }
   }, [hasPendingTransactions]);
+
+  useEffect(() => {
+    (async () => {
+      if (listTxStatus) {
+        await bridgeSol();
+      }
+    })();
+  }, [listTxStatus]);
 
   console.log(address);
   // console.log(selectedDataNft);

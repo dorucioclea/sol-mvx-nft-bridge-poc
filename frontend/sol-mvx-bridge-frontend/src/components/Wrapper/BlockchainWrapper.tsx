@@ -4,7 +4,7 @@ import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
 import { PhantomWalletAdapter, SolflareWalletAdapter } from "@solana/wallet-adapter-wallets";
 import { clusterApiUrl } from "@solana/web3.js";
 import { Home } from "../../pages/Home/Home";
-import { apiTimeout, walletConnectV2ProjectId } from "../../config";
+import { apiTimeout, solNetwork, walletConnectV2ProjectId } from "../../config";
 import { NotificationModal, SignTransactionsModals, TransactionsToastList } from "@multiversx/sdk-dapp/UI";
 import { AuthenticatedRoutesWrapper, DappProvider } from "@multiversx/sdk-dapp/wrappers";
 import { ConnectionProvider, WalletProvider } from "@solana/wallet-adapter-react";
@@ -28,7 +28,6 @@ export const BlockchainWrapper: React.FC<BlockchainWrapperProps> = (props) => {
   const [contextComponent, setContextComponent] = useState<JSX.Element>(<></>);
   const { pathname } = useLocation();
 
-  const solNetwork = WalletAdapterNetwork.Devnet;
   const endpoint = useMemo(() => clusterApiUrl(solNetwork), [solNetwork]);
   const wallets = useMemo(() => [new PhantomWalletAdapter(), new SolflareWalletAdapter()], []);
   console.log(contextComponent);
