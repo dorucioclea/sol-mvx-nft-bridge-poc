@@ -3,12 +3,13 @@ import { HttpException, HttpStatus, Injectable, Logger } from "@nestjs/common";
 import axios from "axios";
 import { decryptDataStreamUrl, returnAPIEndpoint } from "src/utils";
 import { Readable } from "stream";
-import { Keypair, PublicKey } from "@solana/web3.js";
-import { fetchAllDigitalAsset, mplTokenMetadata } from "@metaplex-foundation/mpl-token-metadata";
-import { keypairIdentity } from "@metaplex-foundation/umi";
+import { Connection, Keypair, PublicKey } from "@solana/web3.js";
+import { mplTokenMetadata } from "@metaplex-foundation/mpl-token-metadata";
 import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
 import nacl from "tweetnacl";
 import bs58 from "bs58";
+import { Metaplex } from "@metaplex-foundation/js";
+import { keypairIdentity } from "@metaplex-foundation/umi";
 
 @Injectable()
 export class AccessService {
@@ -199,21 +200,28 @@ export class AccessService {
     tokenAddress: string
   ): Promise<any> {
     try {
-      const query = `https://rpc.ironforge.network/devnet?apiKey=${process.env.IRON_FORGE_API_KEY}`;
+      const solanaApiUrl = process.env.SOLANA_API_KEY;
 
-      const POST = {
-        "id": 1,
-        "method": "getTokenAccountsByOwner",
-        "params": [
-          `${accessRequesterAddr}`,
+      const postData = {
+        jsonrpc: "2.0",
+        id: 1,
+        method: "getTokenAccountsByOwner",
+        params: [
+          accessRequesterAddr,
           {
-            "mint": `${tokenAddress}`,
+            mint: tokenAddress,
           },
           {
-            "encoding": "jsonParsed",
+            encoding: "jsonParsed",
           },
         ],
       };
+      await axios.post(solanaApiUrl, postData).catch(() => {
+        throw new HttpException(
+          "MA-3-1: Access requester does not have rights to view Data Stream",
+          HttpStatus.FORBIDDEN
+        );
+      });
 
       const umi = createUmi(api);
 
@@ -224,20 +232,15 @@ export class AccessService {
 
       const keypair = umi.eddsa.createKeypairFromSecretKey(myMintKeypair.secretKey);
 
-      umi.use(keypairIdentity(keypair)).use(mplTokenMetadata());
+      const connection = new Connection(solanaApiUrl, "confirmed");
 
-      const [assetA] = await fetchAllDigitalAsset(umi, [fromWeb3JsPublicKey(new PublicKey(tokenAddress))]);
+      umi.use(keypairIdentity(keypair));
 
-      assetA.metadata.uri;
+      const metaplex = Metaplex.make(connection);
+      const nft = await metaplex.nfts().findByMint({ mintAddress: new PublicKey(tokenAddress) });
+      console.log(nft);
 
-      const dataStream = await this.fetchDataStreamUrl(assetA.metadata.uri);
-
-      const response = await axios.post(query, POST).catch(() => {
-        throw new HttpException(
-          "MA-3-1: Access requester does not have rights to view Data Stream",
-          HttpStatus.FORBIDDEN
-        );
-      });
+      const dataStream = await this.fetchDataStreamUrl(nft.uri);
 
       return {
         onChainNFTPayload: {
@@ -245,6 +248,7 @@ export class AccessService {
         },
       };
     } catch (e) {
+      console.log(e);
       throw new HttpException("MA-3-4-CR: execution error on catch", HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }

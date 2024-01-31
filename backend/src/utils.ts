@@ -83,8 +83,11 @@ export async function decryptDataStreamUrl(decryptDataStreamUrlParam: {
 
   const encryptedData = X25519EncryptedData.fromJSON(hydrateEncryptedMessage(JSON.parse(encryptedMessageToString)));
   try {
-    const decryptedDataBuffer = await decryptData(encryptedData);
-    return decryptedDataBuffer.toString();
+    const decryptedDataBuffer = (await decryptData(encryptedData)).toString();
+    const decodedString = Buffer.from(decryptedDataBuffer, "base64").toString("ascii");
+    const decodedObject = JSON.parse(decodedString);
+    const zValue = decodedObject.Z;
+    return zValue;
   } catch (e: any) {
     if (e.message?.toLowerCase().indexOf("failed authentication") > -1) {
       throw new HttpException(`${errCodePrefix}-1-CR: Decryption service has failed`, HttpStatus.PRECONDITION_FAILED);
