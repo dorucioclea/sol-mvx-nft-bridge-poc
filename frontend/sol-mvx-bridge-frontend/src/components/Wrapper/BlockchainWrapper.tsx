@@ -32,11 +32,11 @@ export const BlockchainWrapper: React.FC<BlockchainWrapperProps> = (props) => {
   const wallets = useMemo(() => [new PhantomWalletAdapter(), new SolflareWalletAdapter()], []);
   console.log(contextComponent);
   const isMvx = () => {
-    return pathname === "/mvx";
+    return !!pathname.match("/mvx/*/");
   };
 
   const isSol = () => {
-    return pathname === "/sol";
+    return !!pathname.match("/sol/*/");
   };
   const isBridge = () => {
     return pathname === "/bridge";

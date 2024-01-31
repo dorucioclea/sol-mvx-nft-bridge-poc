@@ -35,7 +35,7 @@ export const UnlockSol: React.FC = () => {
       console.log("User rejected the request.");
     }
   };
-  console.log(isSolanaLoggedIn);
+  // console.log(isSolanaLoggedIn);
 
   useEffect(() => {
     provider.on("connect", (publicKey: PublicKey) => {
@@ -43,7 +43,6 @@ export const UnlockSol: React.FC = () => {
       updatePublicKey(publicKey.toString());
       updateIsSolanaLoggedIn(true);
       localStorage.setItem("solanaPublicKey", publicKey.toString());
-      getWalletBalance(publicKey);
       navigate("/sol/solanaNfts");
     });
     provider.on("disconnect", () => {

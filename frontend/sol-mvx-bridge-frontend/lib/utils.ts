@@ -44,6 +44,9 @@ export const getWalletBalance = async (pubKey: PublicKey) => {
 export const clearMvxSessionStorage = () => {
   localStorage.removeItem("persist:sdk-dapp-store");
 };
+export const clearSolSessionStorage = () => {
+  localStorage.setItem("solanaPublicKey", "");
+};
 
 export async function lockNftTransaction(
   tokenIdentifier: string,

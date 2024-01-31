@@ -60,16 +60,18 @@ export const SolInventory: React.FC = () => {
     const getPreaccesMessage = await axios.get("https://sol-mvx-nft-bridge-poc-production.up.railway.app/preaccess?chainId=ED");
     const { signature, publicKey } = await window.solana.signMessage(new TextEncoder().encode(getPreaccesMessage.data.nonce), "utf8");
 
-    const query = await axios.get(
-      `https://sol-mvx-nft-bridge-poc-production.up.railway.app/acceess?nonce=${getPreaccesMessage.data.nonce}&NFTId=${tokenMint}&signature=${bs58.encode(signature)}&chainId=ED&accessRequesterAddr=${publicKey}&streamInline=0&fwdAllHeaders=1&fwdHeaderKeys=a&nestedIdxToStream=1&_bypassSignatureValidation=false&_bypassNonceValidation=false`
+    const { data } = await axios.get(
+      `https://sol-mvx-nft-bridge-poc-production.up.railway.app/acceess?nonce=${getPreaccesMessage.data.nonce}&NFTId=${tokenMint}&signature=${bs58.encode(signature)}&chainId=ED&accessRequesterAddr=${publicKey}&streamInline=0&fwdAllHeaders=1&fwdHeaderKeys=a&nestedIdxToStream=1&_bypassSignatureValidation=false&_bypassNonceValidation=false`,
+      { responseType: "blob" }
     );
-    await window.open(
-      `https://sol-mvx-nft-bridge-poc-production.up.railway.app/acceess?nonce=${getPreaccesMessage.data.nonce}&NFTId=${tokenMint}&signature=${bs58.encode(signature)}&chainId=ED&accessRequesterAddr=${publicKey}&streamInline=0&fwdAllHeaders=1&fwdHeaderKeys=a&nestedIdxToStream=1&_bypassSignatureValidation=false&_bypassNonceValidation=false`
-    );
-    setDataNftContent(query.data);
-    // console.log(
+    // await window.open(
     //   `https://sol-mvx-nft-bridge-poc-production.up.railway.app/acceess?nonce=${getPreaccesMessage.data.nonce}&NFTId=${tokenMint}&signature=${bs58.encode(signature)}&chainId=ED&accessRequesterAddr=${publicKey}&streamInline=0&fwdAllHeaders=1&fwdHeaderKeys=a&nestedIdxToStream=1&_bypassSignatureValidation=false&_bypassNonceValidation=false`
     // );
+
+    const resAsText = await data.text();
+    const resAsJson = JSON.stringify(JSON.parse(resAsText), null, 4);
+    console.log(resAsJson);
+    // setDataNftContent(resAsJson);
   };
 
   useEffect(() => {
@@ -94,6 +96,7 @@ export const SolInventory: React.FC = () => {
             <Button onClick={() => getViewData(dataNft.account.data.parsed.info.mint)}>View Data</Button>
             {dataNftContent && (
               <iframe
+                className="w-full h-[10dvh]"
                 src={`https://sol-mvx-nft-bridge-poc-production.up.railway.app/acceess?nonce=ODU4OjE4OToyNDAw&NFTId=7MSGH3PVGYae7mEn2AXTt1nfsTyoHQxTG7L91cPFEDWn&signature=5AkANGgDyLcmAMpt2VsnLqUTxBVnRz6Hpznm2HXLpTZG6ua9Kp7t67XqY3z3uZjL9SYHeRvaojD2VRpjYdaG3WCU&chainId=ED&accessRequesterAddr=B217DJ814SVSGSHS7SiRjv3CTFBFnLL41VkMD7sYnqa&streamInline=0&fwdAllHeaders=1&fwdHeaderKeys=a&nestedIdxToStream=1&_bypassSignatureValidation=false&_bypassNonceValidation=false`}></iframe>
             )}
           </div>

@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { useUserStore } from "./user";
-import { getProvider, getWalletBalance } from "../../lib/utils";
-import { PublicKey } from "@solana/web3.js";
+import { getWalletBalance } from "../../lib/utils";
+import { Connection, PublicKey } from "@solana/web3.js";
 
 type StoreProviderProps = {
   children: React.ReactNode;
@@ -10,14 +10,9 @@ type StoreProviderProps = {
 export const StoreProvider: React.FC<StoreProviderProps> = (props) => {
   const { children } = props;
   // const provider = getProvider();
-  const updatePublicKey = useUserStore((state) => state.updatePublicKey);
-  const updateIsSolanaLoggedIn = useUserStore((state) => state.updateIsSolanaLoggedIn);
+  const { updatePublicKey, updateIsSolanaLoggedIn, updateSolanaBalance, isSolanaLoggedIn } = useUserStore((state) => state);
 
   const solanaPublicKey = localStorage.getItem("solanaPublicKey");
-
-  if (solanaPublicKey !== null && solanaPublicKey !== "") {
-    getWalletBalance(new PublicKey(solanaPublicKey));
-  }
 
   useEffect(() => {
     if (solanaPublicKey !== null && solanaPublicKey !== "") {
@@ -28,6 +23,16 @@ export const StoreProvider: React.FC<StoreProviderProps> = (props) => {
       updateIsSolanaLoggedIn(false);
     }
   }, []);
+
+  useEffect(() => {
+    (async () => {
+      const connection = new Connection("https://api.devnet.solana.com");
+
+      if (typeof solanaPublicKey === undefined || solanaPublicKey === null || solanaPublicKey === "") return;
+      const balance = await connection.getBalance(new PublicKey(solanaPublicKey));
+      updateSolanaBalance(Number(balance));
+    })();
+  }, [isSolanaLoggedIn]);
 
   return <>{children}</>;
 };

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { Button } from "../../ui/button";
 import { useGetAccount, useGetIsLoggedIn } from "@multiversx/sdk-dapp/hooks";
@@ -8,22 +8,48 @@ import solAvatar from "../../assets/solAvatar.png";
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
 import { useUserStore } from "../../store/user";
 import { DropdownComponent } from "../DropdownMenu/DropdownComponent";
-import { LAMPORTS_PER_SOL } from "@solana/web3.js";
-import { clearMvxSessionStorage } from "../../../lib/utils";
+import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
+import { clearMvxSessionStorage, clearSolSessionStorage, getProvider, getWalletBalance } from "../../../lib/utils";
 
 export const Header: React.FC = () => {
   const isMxLoggedIn = useGetIsLoggedIn();
   const { address, balance } = useGetAccount();
+  const { updateIsSolanaLoggedIn, updatePublicKey } = useUserStore((state) => state);
   const isSolLoggedIn = useUserStore((state) => state.isSolanaLoggedIn);
   const solanaBalance = useUserStore((state) => state.solanaBalance);
   const storePublicKey = useUserStore((state) => state.publicKey);
+  const provider = getProvider();
+
   // console.log(balance);
 
   const mvxLogout = logout;
 
+  const disconnect = async () => {
+    if (!provider) return;
+    try {
+      const resp = await provider.disconnect();
+      console.log(resp.publicKey.toString());
+    } catch (err) {
+      console.log("User rejected the request.");
+    }
+  };
+
+  useEffect(() => {
+    provider.on("disconnect", () => {
+      updatePublicKey("");
+      updateIsSolanaLoggedIn(false);
+      localStorage.setItem("solanaPublicKey", "");
+    });
+  }, [provider]);
+
   const handleMvxLogout = () => {
     clearMvxSessionStorage();
     mvxLogout("/mvx", undefined, false);
+  };
+
+  const handleSolLogout = async () => {
+    clearSolSessionStorage();
+    await disconnect();
   };
 
   return (
@@ -74,7 +100,7 @@ export const Header: React.FC = () => {
                 </Button>
               }
               pathToRedirect={"/sol/solInventory"}
-              // disconnectWallet={logout("/mvx")}
+              disconnectWallet={handleSolLogout}
             />
           ) : (
             <Link to={"sol/solLogin"}>
@@ -86,11 +112,11 @@ export const Header: React.FC = () => {
         </div>
       </div>
       <div className="flex flex-row gap-x-5 justify-left px-9 items-center h-10 border-b border-b-gray-400 font-bold">
-        <NavLink to={"/mvx"} className={({ isActive }) => (isActive ? "bg-slate-700/40" : "bg-transparent")}>
+        <NavLink to={"/mvx"} end className={({ isActive }) => (isActive ? "bg-slate-700/40" : "bg-transparent")}>
           <p className="flex justify-center items-center text-teal-400 px-3 h-10">MultiversX</p>
         </NavLink>
 
-        <NavLink to={"/sol"} className={({ isActive }) => (isActive ? "bg-slate-700/40" : "bg-transparent")}>
+        <NavLink to={"/sol"} end className={({ isActive }) => (isActive ? "bg-slate-700/40" : "bg-transparent")}>
           <p className="flex justify-center items-center bg-gradient-to-r from-violet-500 to-[#5984cd] bg-clip-text text-transparent px-3 h-10">Solana</p>
         </NavLink>
       </div>
