@@ -317,6 +317,8 @@ export class AccessService {
 
     const response = await axios.post(solanaApiUrl, postData);
 
+    console.log(response.data);
+
     if (
       !response.data.result.value ||
       !Array.isArray(response.data.result.value) ||
