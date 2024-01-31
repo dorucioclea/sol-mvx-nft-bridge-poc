@@ -298,30 +298,36 @@ export class AccessService {
     api: string,
     tokenAddress: string
   ): Promise<any> {
+    const solanaApiUrl = process.env.SOLANA_API_KEY;
+
+    const postData = {
+      jsonrpc: "2.0",
+      id: 1,
+      method: "getTokenAccountsByOwner",
+      params: [
+        accessRequesterAddr,
+        {
+          mint: tokenAddress,
+        },
+        {
+          encoding: "jsonParsed",
+        },
+      ],
+    };
+
+    const response = await axios.post(solanaApiUrl, postData);
+
+    if (
+      !response.data.result.value ||
+      !Array.isArray(response.data.result.value) ||
+      response.data.result.value.length === 0
+    ) {
+      throw new HttpException(
+        "MA-3-1: Access requester does not have rights to view Data Stream",
+        HttpStatus.FORBIDDEN
+      );
+    }
     try {
-      const solanaApiUrl = process.env.SOLANA_API_KEY;
-
-      const postData = {
-        jsonrpc: "2.0",
-        id: 1,
-        method: "getTokenAccountsByOwner",
-        params: [
-          accessRequesterAddr,
-          {
-            mint: tokenAddress,
-          },
-          {
-            encoding: "jsonParsed",
-          },
-        ],
-      };
-      await axios.post(solanaApiUrl, postData).catch(() => {
-        throw new HttpException(
-          "MA-3-1: Access requester does not have rights to view Data Stream",
-          HttpStatus.FORBIDDEN
-        );
-      });
-
       const umi = createUmi(api);
 
       const mintPKString = process.env.PRIVATE_KEY;
@@ -337,7 +343,6 @@ export class AccessService {
 
       const metaplex = Metaplex.make(connection);
       const nft = await metaplex.nfts().findByMint({ mintAddress: new PublicKey(tokenAddress) });
-      console.log(nft);
 
       const dataStream = await this.fetchDataStreamUrl(nft.uri);
 
