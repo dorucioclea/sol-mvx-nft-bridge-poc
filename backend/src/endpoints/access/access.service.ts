@@ -66,7 +66,7 @@ export class AccessService {
         ? parseInt(process.env.CHAIN_HOURS_PER_EPOCH, 10)
         : 24;
 
-      await this.validateNonce(api, hoursPerEpoch, _bypassNonceValidation, nonce); // this is ok
+      await this.validateNonce(returnAPIEndpoint("ED"), hoursPerEpoch, _bypassNonceValidation, nonce); // this is ok
 
       const { onChainNFTPayload } = (await this.checkOnChainNFTBalanceForRequester(
         accessRequesterAddr,
