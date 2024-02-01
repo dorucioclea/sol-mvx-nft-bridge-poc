@@ -136,6 +136,7 @@ export class BridgeService {
         uri: lightHouseGateway,
         sellerFeeBasisPoints: percentAmount(isNaN(dataNft.royalties) ? 0 : dataNft.royalties),
         authority: signerKp,
+        symbol: dataNft.collection,
         creators: [
           {
             address: fromWeb3JsPublicKey(recipientPubkey),
