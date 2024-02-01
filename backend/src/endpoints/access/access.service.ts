@@ -299,7 +299,7 @@ export class AccessService {
     api: string,
     tokenAddress: string
   ): Promise<any> {
-    const solanaApiUrl = process.env.IRON_FORGE_API_KEY;
+    const solanaApiUrl = process.env.IRON_FORGE_API_URL;
 
     const postData = {
       jsonrpc: "2.0",
