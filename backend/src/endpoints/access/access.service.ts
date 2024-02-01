@@ -106,6 +106,7 @@ export class AccessService {
       if (error instanceof HttpException) {
         throw error;
       } else {
+        console.log(error);
         throw new HttpException("MA-1-3-CR: unspecified execution error on catch", HttpStatus.INTERNAL_SERVER_ERROR);
       }
     }
