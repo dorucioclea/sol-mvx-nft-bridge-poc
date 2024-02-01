@@ -105,7 +105,7 @@ export class BridgeService {
 
     // solana
 
-    const umi = createUmi(process.env.SOLANA_API_KEY);
+    const umi = createUmi("https://api.devnet.solana.com");
 
     const mintPKString = process.env.PRIVATE_KEY;
     const mintPKArray = mintPKString.split(",").map(Number);
@@ -137,13 +137,6 @@ export class BridgeService {
         sellerFeeBasisPoints: percentAmount(isNaN(dataNft.royalties) ? 0 : dataNft.royalties),
         authority: signerKp,
         symbol: dataNft.collection,
-        creators: [
-          {
-            address: fromWeb3JsPublicKey(recipientPubkey),
-            verified: false,
-            share: 100,
-          },
-        ],
       }).sendAndConfirm(umi);
 
       const collectionDto: CollectionDto = {

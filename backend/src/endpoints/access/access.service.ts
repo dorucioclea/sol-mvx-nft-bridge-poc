@@ -298,7 +298,7 @@ export class AccessService {
     api: string,
     tokenAddress: string
   ): Promise<any> {
-    const solanaApiUrl = process.env.SOLANA_API_KEY;
+    const solanaApiUrl = process.env.IRON_FORGE_API_KEY;
 
     const postData = {
       jsonrpc: "2.0",
@@ -315,7 +315,7 @@ export class AccessService {
       ],
     };
 
-    const response = await axios.post(solanaApiUrl, postData);
+    const response = await axios.post(`${solanaApiUrl}=${process.env.IRON_FORGE_API_KEY}`, postData);
 
     console.log(response.data);
 
@@ -330,18 +330,7 @@ export class AccessService {
       );
     }
     try {
-      const umi = createUmi(api);
-
-      const mintPKString = process.env.PRIVATE_KEY;
-      const mintPKArray = mintPKString.split(",").map(Number);
-
-      const myMintKeypair = Keypair.fromSecretKey(Uint8Array.from(mintPKArray));
-
-      const keypair = umi.eddsa.createKeypairFromSecretKey(myMintKeypair.secretKey);
-
-      const connection = new Connection(solanaApiUrl, "confirmed");
-
-      umi.use(keypairIdentity(keypair));
+      const connection = new Connection(api, "confirmed");
 
       const metaplex = Metaplex.make(connection);
       const nft = await metaplex.nfts().findByMint({ mintAddress: new PublicKey(tokenAddress) });
