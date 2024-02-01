@@ -73,7 +73,7 @@ export class BridgeService {
 
     const response = await axios.get(query);
 
-    if (response.data.sender != address) {
+    if (response.data[0].sender != address) {
       throw new HttpException("Not authorized", HttpStatus.UNAUTHORIZED);
     }
 
@@ -112,6 +112,8 @@ export class BridgeService {
 
     const myMintKeypair = Keypair.fromSecretKey(Uint8Array.from(mintPKArray));
 
+    console.log(myMintKeypair.publicKey.toString());
+
     const keypair = umi.eddsa.createKeypairFromSecretKey(myMintKeypair.secretKey);
 
     const signerKp = createSignerFromKeypair(umi, fromWeb3JsKeypair(myMintKeypair));
@@ -134,13 +136,7 @@ export class BridgeService {
         uri: lightHouseGateway,
         sellerFeeBasisPoints: percentAmount(isNaN(dataNft.royalties) ? 0 : dataNft.royalties),
         authority: signerKp,
-        creators: [
-          {
-            address: fromWeb3JsPublicKey(recipientPubkey),
-            verified: false,
-            share: 100,
-          },
-        ],
+        symbol: "DATANFT",
       }).sendAndConfirm(umi);
 
       const collectionDto: CollectionDto = {
@@ -150,6 +146,8 @@ export class BridgeService {
       };
 
       const storedCollection = await this.createCollection(collectionDto);
+
+      console.log(storedCollection);
 
       if (!storedCollection) {
         throw new HttpException("Error storing collection", HttpStatus.INTERNAL_SERVER_ERROR);

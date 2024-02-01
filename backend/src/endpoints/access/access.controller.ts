@@ -6,7 +6,7 @@ import { ApiQuery } from "@nestjs/swagger";
 export class AccessController {
   constructor(private readonly accessService: AccessService) {}
 
-  @Get()
+  @Get("/acceess")
   @Header("Cache-Control", "no-store")
   @ApiQuery({ name: "nonce", type: String, description: "Nonce value" })
   @ApiQuery({ name: "NFTId", type: String, description: "NFT ID" })
@@ -43,6 +43,7 @@ export class AccessController {
     @Query("streamInline") streamInline: number | undefined,
     @Query("fwdAllHeaders") fwdAllHeaders: number | undefined,
     @Query("fwdHeaderKeys") fwdHeaderKeys: string | undefined,
+    @Query("nestedIdxToStream") nestedIdxToStream: number | undefined,
     @Query("_bypassNonceValidation")
     _bypassNonceValidation = false,
     @Query("_bypassSignatureValidation")
@@ -62,6 +63,7 @@ export class AccessController {
         streamInline,
         fwdAllHeaders,
         fwdHeaderKeys,
+        nestedIdxToStream,
         _bypassNonceValidation,
         _bypassSignatureValidation,
         clientRes,
