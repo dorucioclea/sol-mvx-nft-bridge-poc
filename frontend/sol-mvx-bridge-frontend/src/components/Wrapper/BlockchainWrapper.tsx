@@ -55,7 +55,7 @@ export const BlockchainWrapper: React.FC<BlockchainWrapperProps> = (props) => {
           <TransactionsToastList successfulToastLifetime={1000} customToastClassName="absolute" />
           <NotificationModal />
           <SignTransactionsModals className="custom-class-for-modals" />
-          <AuthenticatedRoutesWrapper routes={routes} unlockRoute="/">
+          <AuthenticatedRoutesWrapper routes={routes} unlockRoute="/unlock">
             {children}
           </AuthenticatedRoutesWrapper>
         </DappProvider>
@@ -84,7 +84,7 @@ export const BlockchainWrapper: React.FC<BlockchainWrapperProps> = (props) => {
           <TransactionsToastList successfulToastLifetime={1000} customToastClassName="absolute" />
           <NotificationModal />
           <SignTransactionsModals className="custom-class-for-modals" />
-          <AuthenticatedRoutesWrapper routes={routes} unlockRoute="/">
+          <AuthenticatedRoutesWrapper routes={routes} unlockRoute="/unlock">
             <ConnectionProvider endpoint={endpoint}>
               <WalletProvider wallets={wallets}>
                 <WalletModalProvider>{children}</WalletModalProvider>
