@@ -6,10 +6,12 @@ import bs58 from "bs58";
 import { clusterApiUrl, Connection, PublicKey } from "@solana/web3.js";
 import { Metaplex } from "@metaplex-foundation/js";
 import { Card, CardContent, CardHeader } from "../../../ui/card";
+import { SolInventoryModal } from "./components/SolInventoryModal";
 
 export const SolInventory: React.FC = () => {
   const { publicKey } = useUserStore((state) => state);
   const [dataNfts, setDataNfts] = React.useState<Array<any>>([]);
+  const [modalContent, setModalContent] = React.useState<string>("");
 
   const ironForgeRPC = "https://rpc.ironforge.network/devnet?apiKey=01HNJAHBRF5A8MXB0VYCMSHNCZ";
 
@@ -111,7 +113,7 @@ export const SolInventory: React.FC = () => {
     const { data } = await axios.get(
       `https://sol-mvx-nft-bridge-poc-production.up.railway.app/acceess?nonce=${getPreaccesMessage.data.nonce}&NFTId=${tokenMint}&signature=${bs58.encode(signature)}&chainId=ED&accessRequesterAddr=${publicKey}&streamInline=0&fwdAllHeaders=1&fwdHeaderKeys=a&nestedIdxToStream=1&_bypassSignatureValidation=false&_bypassNonceValidation=false`
     );
-    await window.open(
+    setModalContent(
       `https://sol-mvx-nft-bridge-poc-production.up.railway.app/acceess?nonce=${getPreaccesMessage.data.nonce}&NFTId=${tokenMint}&signature=${bs58.encode(signature)}&chainId=ED&accessRequesterAddr=${publicKey}&streamInline=0&fwdAllHeaders=1&fwdHeaderKeys=a&nestedIdxToStream=1&_bypassSignatureValidation=false&_bypassNonceValidation=false`
     );
 
@@ -162,7 +164,10 @@ export const SolInventory: React.FC = () => {
                   {/*  <span className="text-muted-foreground">{dataNft.newData.address.toString()}%</span>*/}
                   {/*</div>*/}
                 </CardContent>
-                <Button onClick={() => getViewData(dataNft.newData.mint.address.toString())}>View Data</Button>
+                <SolInventoryModal
+                  modalContent={modalContent}
+                  buttonTrigger={<Button onClick={() => getViewData(dataNft.newData.mint.address.toString())}>View Data</Button>}
+                />
               </Card>
             ))}
       </div>
