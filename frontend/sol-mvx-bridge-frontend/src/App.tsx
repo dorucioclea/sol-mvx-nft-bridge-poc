@@ -27,7 +27,7 @@ function App() {
             <BlockchainWrapper>
               <Content>
                 <Routes>
-                  <Route path="/" element={<Home />}></Route>
+                  <Route path="/" element={<Home />} />
                   <Route path="bridge" element={<Bridge />} />
 
                   <Route path="sol" element={<Outlet />}>

@@ -42,7 +42,7 @@ export const Bridge: React.FC = () => {
       const { data } = await axios.post(
         url,
         {
-          txHash: "33a9ee31462757a81e8d8d15ac40dc9a58146fc7dd645b5297a053410165b4dc",
+          txHash: listTxHash,
         },
         {
           headers: {
@@ -112,12 +112,9 @@ export const Bridge: React.FC = () => {
           selectedDataNfts={selectedDataNfts}
           setSelectedDataNfts={setSelectedDataNfts}
         />
-        <div className="flex flex-col gap-4">
-          <Button onClick={handleSendTransaction}>
-            <ArrowLeftRight className="w-4 h-4 mr-1" /> Bridge
-          </Button>
-          <Button onClick={bridgeSol}>SOL TRANSFER</Button>
-        </div>
+        <Button onClick={handleSendTransaction}>
+          <ArrowLeftRight className="w-4 h-4 mr-1" /> Bridge
+        </Button>
         <CardComponent
           title="to"
           imgSrc={solLogo}

@@ -1,6 +1,5 @@
 import React, { JSX, useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
 import { PhantomWalletAdapter, SolflareWalletAdapter } from "@solana/wallet-adapter-wallets";
 import { clusterApiUrl } from "@solana/web3.js";
 import { Home } from "../../pages/Home/Home";
@@ -39,7 +38,7 @@ export const BlockchainWrapper: React.FC<BlockchainWrapperProps> = (props) => {
     return !!pathname.match("/sol/*/");
   };
   const isBridge = () => {
-    return pathname === "/bridge";
+    return !!pathname.match("/*/");
   };
 
   useEffect(() => {
@@ -56,7 +55,7 @@ export const BlockchainWrapper: React.FC<BlockchainWrapperProps> = (props) => {
           <TransactionsToastList successfulToastLifetime={1000} customToastClassName="absolute" />
           <NotificationModal />
           <SignTransactionsModals className="custom-class-for-modals" />
-          <AuthenticatedRoutesWrapper routes={routes} unlockRoute="/unlock">
+          <AuthenticatedRoutesWrapper routes={routes} unlockRoute="/">
             {children}
           </AuthenticatedRoutesWrapper>
         </DappProvider>
@@ -85,7 +84,7 @@ export const BlockchainWrapper: React.FC<BlockchainWrapperProps> = (props) => {
           <TransactionsToastList successfulToastLifetime={1000} customToastClassName="absolute" />
           <NotificationModal />
           <SignTransactionsModals className="custom-class-for-modals" />
-          <AuthenticatedRoutesWrapper routes={routes} unlockRoute="/unlock">
+          <AuthenticatedRoutesWrapper routes={routes} unlockRoute="/">
             <ConnectionProvider endpoint={endpoint}>
               <WalletProvider wallets={wallets}>
                 <WalletModalProvider>{children}</WalletModalProvider>

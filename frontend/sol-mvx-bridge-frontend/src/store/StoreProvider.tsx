@@ -1,6 +1,5 @@
 import React, { useEffect } from "react";
 import { useUserStore } from "./user";
-import { getWalletBalance } from "../../lib/utils";
 import { Connection, PublicKey } from "@solana/web3.js";
 
 type StoreProviderProps = {
