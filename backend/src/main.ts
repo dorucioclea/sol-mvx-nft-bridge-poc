@@ -52,14 +52,16 @@ async function bootstrap() {
 
   if (apiConfigService.getIsPublicApiFeatureActive()) {
     const websocketPublisherApp = await NestFactory.createMicroservice<MicroserviceOptions>(GatewayModule, {
-      // transport: Transport.REDIS,
-      // options: {
-      //   host: process.env.REDIS_HOST,
-      //   port: Number(process.env.REDIS_PORT),
-      //   retryAttempts: 100,
-      //   retryDelay: 1000,
-      //   retryStrategy: () => 1000,
-      // },
+      transport: Transport.REDIS,
+      options: {
+        host: process.env.REDIS_HOST,
+        port: Number(process.env.REDIS_PORT),
+        username: process.env.REDIS_USERNAME,
+        password: process.env.REDIS_PASSWORD,
+        retryAttempts: 100,
+        retryDelay: 1000,
+        retryStrategy: () => 1000,
+      },
     });
 
     websocketPublisherApp.useWebSocketAdapter(new SocketAdapter(websocketPublisherApp));
