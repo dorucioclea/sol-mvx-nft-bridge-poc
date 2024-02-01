@@ -116,17 +116,19 @@ pub trait LockNfts: events::EventsModule {
         }
     }
 
-    #[only_owner]
     #[endpoint(unlockForAddress)]
     fn unlock(
         &self,
         address: ManagedAddress,
         tokens_unlocked: MultiValueEncoded<MultiValue3<TokenIdentifier, u64, BigUint>>,
     ) {
+        let caller = self.blockchain().get_caller();
         require!(
             self.is_unlocking_paused().get() == false,
             "Unlocking paused"
         );
+
+        require!(self.admin_list().contains(&caller), "Caller not admin");
 
         let mut payments = ManagedVec::new();
         for token in tokens_unlocked.into_iter() {

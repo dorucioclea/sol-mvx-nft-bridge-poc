@@ -65,6 +65,22 @@ setIsLockingPaused() {
 
 }
 
+setIsUnlockingPaused() {
+
+
+    mxpy --verbose contract call ${ADDRESS} \
+    --recall-nonce \
+    --pem ${WALLET} \
+    --gas-limit=6000000 \
+    --function="setIsUnlockingPaused" \
+    --arguments $1 \
+    --proxy ${PROXY} \
+    --chain ${CHAIN_ID} \
+    --send  || return
+
+
+}
+
 
 addToAdminlist() {
 
@@ -104,5 +120,23 @@ lock() {
     --chain ${CHAIN_ID} \
     --send || return
 
+
+}
+
+
+
+addToAdminlist() {
+    # $1 = address
+    address="0x$(mxpy wallet bech32 --decode ${1})"
+
+    mxpy --verbose contract call ${ADDRESS} \
+    --recall-nonce \
+    --pem ${WALLET} \
+    --gas-limit=6000000 \
+    --function="addToAdminlist" \
+    --arguments $address \
+    --proxy ${PROXY} \
+    --chain ${CHAIN_ID} \
+    --send  || return
 
 }
