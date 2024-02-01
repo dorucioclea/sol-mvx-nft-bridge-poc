@@ -9,9 +9,6 @@ import { join } from "path";
 import { ApiConfigService } from "./common/api-config/api.config.service";
 import { PublicAppModule } from "./public.app.module";
 import { LoggerInitializer } from "@multiversx/sdk-nestjs-common";
-import { MicroserviceOptions, Transport } from "@nestjs/microservices";
-import { SocketAdapter } from "./common/socket-adapter/socket.adapter";
-import { GatewayModule } from "./endpoints/websocket/gateway.module";
 
 async function bootstrap() {
   const publicApp = await NestFactory.create(PublicAppModule);
@@ -51,23 +48,6 @@ async function bootstrap() {
   SwaggerModule.setup("", publicApp, document);
 
   if (apiConfigService.getIsPublicApiFeatureActive()) {
-    const websocketPublisherApp = await NestFactory.createMicroservice<MicroserviceOptions>(GatewayModule, {
-      transport: Transport.REDIS,
-      options: {
-        host: process.env.REDIS_HOST,
-        port: Number(process.env.REDIS_PORT),
-        username: process.env.REDIS_USERNAME,
-        password: process.env.REDIS_PASSWORD,
-        retryAttempts: 100,
-        retryDelay: 1000,
-        retryStrategy: () => 1000,
-      },
-    });
-
-    websocketPublisherApp.useWebSocketAdapter(new SocketAdapter(websocketPublisherApp));
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    websocketPublisherApp.listen();
-
     //  await publicApp.listen(apiConfigService.getPublicApiFeaturePort());
     await publicApp.listen(process.env.PORT || 3000, "0.0.0.0"); // railway setup
   }
