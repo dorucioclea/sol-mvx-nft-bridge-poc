@@ -10,4 +10,6 @@ export class CollectionB {
   nonce: number;
   @Column({ length: 10000 })
   sftPrivateKey: string;
+  @Column()
+  sftPublicKey: string;
 }
