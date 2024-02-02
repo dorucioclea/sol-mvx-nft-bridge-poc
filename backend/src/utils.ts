@@ -6,9 +6,12 @@ import {
   BinaryCodec,
   ContractCallPayloadBuilder,
   ContractFunction,
+  ResultsParser,
+  SmartContract,
   TokenIdentifierValue,
   Transaction,
   U64Value,
+  VariadicValue,
 } from "@multiversx/sdk-core/out";
 import { X25519EncryptedData } from "@multiversx/sdk-wallet/out/crypto/x25519EncryptedData";
 import { HttpException, HttpStatus } from "@nestjs/common";
