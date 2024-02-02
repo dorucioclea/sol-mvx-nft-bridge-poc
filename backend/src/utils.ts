@@ -1,4 +1,15 @@
-import { AbiRegistry, BinaryCodec } from "@multiversx/sdk-core/out";
+import {
+  AbiRegistry,
+  Address,
+  AddressValue,
+  BigUIntValue,
+  BinaryCodec,
+  ContractCallPayloadBuilder,
+  ContractFunction,
+  TokenIdentifierValue,
+  Transaction,
+  U64Value,
+} from "@multiversx/sdk-core/out";
 import { X25519EncryptedData } from "@multiversx/sdk-wallet/out/crypto/x25519EncryptedData";
 import { HttpException, HttpStatus } from "@nestjs/common";
 import { hookGetSecretKeyContent } from "./hooks";
@@ -120,3 +131,30 @@ export async function encryptData(data: string): Promise<X25519EncryptedData> {
 
   return encryptedData;
 }
+
+export const unlockTx = (
+  senderAddress: string,
+  contractAddress: string,
+  addressToUnlock: string,
+  tokenIdentifier: string,
+  tokenNonce: number,
+  tokenAmount: number,
+  chainID: string
+) => {
+  const unlock = new Transaction({
+    value: 0,
+    data: new ContractCallPayloadBuilder()
+      .setFunction(new ContractFunction("unlockForAddress"))
+      .addArg(new AddressValue(new Address(addressToUnlock)))
+      .addArg(new TokenIdentifierValue(tokenIdentifier))
+      .addArg(new U64Value(tokenNonce))
+      .addArg(new BigUIntValue(tokenAmount))
+      .build(),
+    receiver: new Address(contractAddress),
+    sender: new Address(senderAddress),
+    gasLimit: 20000000,
+    chainID: chainID,
+  });
+
+  return unlock;
+};
