@@ -92,13 +92,19 @@ export const SolInventory: React.FC = () => {
     //
     const { data } = await axios.post(ironForgeRPC, postData);
     console.log(data);
-    const mintIds = data.result.value.map((item: any) => item.account.data.parsed.info.mint);
+    const mintIds = data.result.value
+      .map((item: any) => {
+        if (item.account.data.parsed.info.tokenAmount.uiAmount > 0) {
+          return item.account.data.parsed.info.mint;
+        }
+      })
+      .filter((mintId: string | undefined) => mintId !== undefined);
     const _dataNft: any = [];
 
     for (const mintId of mintIds) {
       const newData: any = await mx.nfts().findByMint({ mintAddress: new PublicKey(mintId) });
       const { data } = await axios.get(newData.uri);
-      _dataNft.push({ newData, dataNftsMetadata: data });
+      _dataNft.push({ newData, dataNftsMetadata: data }); // use SolDataNft (is a DataNft + mintAddress + metadata(from uri))
       // console.log(newData.metadataAddress.toString());
     }
     console.log(_dataNft);

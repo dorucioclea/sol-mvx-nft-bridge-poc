@@ -11,9 +11,13 @@ import { NftsContainer } from "../../components/Container/NftsContainer";
 import { lockNftTransaction } from "../../../lib/utils";
 import axios from "axios";
 import { Address } from "@multiversx/sdk-core/out";
+import { Connection, PublicKey, clusterApiUrl } from "@solana/web3.js";
+import { Metaplex } from "@metaplex-foundation/js";
+import { SolDataNft } from "../Solana/SolNfts/SolDataNft";
 
 export const Bridge: React.FC = () => {
   const { address } = useGetAccountInfo();
+  const { publicKey } = useUserStore((state) => state);
   const { chainID } = useGetNetworkConfig();
   const { tokenLogin } = useGetLoginInfo();
   const { pendingTransactions, hasPendingTransactions } = useGetPendingTransactions();
@@ -21,9 +25,12 @@ export const Bridge: React.FC = () => {
   const solBalance = useUserStore((state) => state.solanaBalance);
 
   const [dataNfts, setDataNfts] = useState<Array<DataNft>>([]);
+  const [solDataNfts, setSolDataNfts] = useState<Array<SolDataNft>>([]);
   const [selectedDataNfts, setSelectedDataNfts] = useState<Array<DataNft>>([]);
   const [amountToBridge, setAmountToBridge] = useState<number>(0);
   const [selectedDataNft, setSelectedDataNft] = useState<Record<any, any>>({});
+
+  const [bridgeIsActive, setBridgeIsActive] = useState<boolean>(false);
 
   const [listTxSessionId, setListTxSessionId] = useState<string>("");
   const [listTxStatus, setListTxStatus] = useState<boolean>(false);
@@ -31,8 +38,10 @@ export const Bridge: React.FC = () => {
   const trackTransactionStatus = useTrackTransactionStatus({
     transactionId: listTxSessionId,
   });
-  const test =
-    "ZXJkMTdlZzQzcjN4dmVudWMweWF5YXVocWYwNjZsdW01MnBobnl0dncwdG52eTY3N3VwN2NhZXNlN2d2M2c.YUhSMGNITTZMeTkxZEdsc2N5NXRkV3gwYVhabGNuTjRMbU52YlEuNDFkNjMwY2NlMzBhMmY2MDgzY2M3YmM0ODA2MThkY2M4ZGUwMGUyZDYwOTIzZWRkZWM3YjBhOTgzOTUwNGE3NS43MjAwLmV5SjBhVzFsYzNSaGJYQWlPakUzTURZMU5UTTVPVEI5.d10c2b59981927cc2b43ebdeab6c9ee93c10a4d064c474188821761df1730f6c3d23634d2622afcfeeb5cdb402b4664e2525a591250856dc3ab3531cabb07907";
+
+  const ironForgeRPC = "https://rpc.ironforge.network/devnet?apiKey=01HNJAHBRF5A8MXB0VYCMSHNCZ";
+  const connection = new Connection(clusterApiUrl("devnet"));
+  const mx = Metaplex.make(connection);
 
   async function bridgeSol(): Promise<any> {
     console.log("Before req");
@@ -51,6 +60,7 @@ export const Bridge: React.FC = () => {
         }
       );
       console.log("Inside post");
+      setBridgeIsActive(false);
       return data;
     } catch (error) {
       console.error(error);
@@ -83,16 +93,62 @@ export const Bridge: React.FC = () => {
     async function fetchData() {
       const _dataNfts = await DataNft.ownedByAddress(address);
       // console.log(_dataNfts);
+
+      const postData = {
+        jsonrpc: "2.0",
+        id: 1,
+        method: "getTokenAccountsByOwner",
+        params: [
+          publicKey,
+          {
+            "programId": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+          },
+          {
+            "encoding": "jsonParsed",
+          },
+        ],
+      };
+      //
+      const { data } = await axios.post(ironForgeRPC, postData);
+      console.log(data);
+      const mintIds = data.result.value
+        .map((item: any) => {
+          if (item.account.data.parsed.info.tokenAmount.uiAmount > 0) {
+            return { mintAddress: item.account.data.parsed.info.mint, solBalance: item.account.data.parsed.info.tokenAmount.uiAmount };
+          }
+        })
+        .filter((mintId: string | undefined) => mintId !== undefined);
+      const _solDataNfts: SolDataNft[] = [];
+
+      for (const mintId of mintIds) {
+        console.log(mintId);
+        const newData: any = await mx.nfts().findByMint({ mintAddress: new PublicKey(mintId.mintAddress) });
+        const { data } = await axios.get(newData.uri);
+
+        const tokenIdentifierAttribute = data.attributes.find((attribute: any) => attribute.trait_type === "Token Identifier");
+        const tokenNonceAttribute = data.attributes.find((attribute: any) => attribute.trait_type === "Token Nonce");
+
+        if (tokenIdentifierAttribute && tokenNonceAttribute) {
+          const tokenIdentifier = tokenIdentifierAttribute.value;
+          const nonce = tokenNonceAttribute.value;
+
+          const dataNft: DataNft = await DataNft.createFromApi({ nonce, tokenIdentifier });
+          _solDataNfts.push(new SolDataNft(dataNft, newData.metadataAddress.toString(), data, mintId.solBalance));
+        }
+      }
+
+      setSolDataNfts(_solDataNfts);
       setDataNfts(_dataNfts);
     }
-    if (!hasPendingTransactions) {
+    if (!hasPendingTransactions || !bridgeIsActive) {
       fetchData();
     }
-  }, [hasPendingTransactions]);
+  }, [hasPendingTransactions, bridgeIsActive]);
 
   useEffect(() => {
     (async () => {
       if (listTxStatus) {
+        setBridgeIsActive(true);
         await bridgeSol();
       }
     })();
@@ -119,7 +175,7 @@ export const Bridge: React.FC = () => {
           title="to"
           imgSrc={solLogo}
           alt="Solana Logo"
-          dataNfts={[]}
+          dataNfts={solDataNfts}
           selectedDataNfts={selectedDataNfts}
           setSelectedDataNfts={setSelectedDataNfts}
         />

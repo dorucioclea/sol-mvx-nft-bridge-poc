@@ -16,7 +16,7 @@ export const UnlockSol: React.FC = () => {
   const connect = async () => {
     if (!provider) return;
     try {
-      const resp = await provider.connect({ onlyIfTrusted: true });
+      const resp = await provider.connect(); //{ onlyIfTrusted: true }
       if (resp.publicKey.toString()) {
         updateIsSolanaLoggedIn(true);
       }

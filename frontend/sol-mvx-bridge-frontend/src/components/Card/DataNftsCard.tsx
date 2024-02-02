@@ -16,6 +16,7 @@ export const DataNftsCard: React.FC<DataNftsCardProps> = (props) => {
       <CardContent className="px-3">
         <img src={dataNft?.nftImgUrl} alt={dataNft?.tokenIdentifier} className="w-[6rem]" />
         <span className="text-xs line-clamp-2 h-[2.4rem] cursor-help pt-2">{dataNft?.title}</span>
+        <span className="text-xs line-clamp-2 h-[2.4rem] cursor-help pt-2">balance: {dataNft?.balance.toString()}</span>
       </CardContent>
     </Card>
   );
