@@ -2,11 +2,13 @@ import { DataNft } from "@itheum/sdk-mx-data-nft/out";
 import lighthouse from "@lighthouse-web3/sdk";
 import { Address } from "@multiversx/sdk-core/out";
 import { LoggerInitializer } from "@multiversx/sdk-nestjs-common";
-import { HttpException, HttpStatus, Injectable, Logger } from "@nestjs/common";
+import { HttpException, HttpStatus, Inject, Injectable, Logger } from "@nestjs/common";
 import axios from "axios";
 import { ApiConfigService } from "src/common/api-config/api.config.service";
 import { replaceLastSegment } from "src/utils";
 import { LockEvent } from "./bridge.interfaces";
+import bs58 from "bs58";
+import nacl from "tweetnacl";
 
 import {
   TokenStandard,
@@ -19,17 +21,20 @@ import { createSignerFromKeypair, generateSigner, keypairIdentity, percentAmount
 import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
 import { fromWeb3JsKeypair, fromWeb3JsPublicKey } from "@metaplex-foundation/umi-web3js-adapters";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Keypair, PublicKey } from "@solana/web3.js";
+import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import { Repository } from "typeorm";
 import { CollectionDto } from "./dto/collection.dto";
 import { TransactionDto } from "./dto/transaction.entity";
 import { CollectionB } from "./entities/collection.entity";
 import { TransactionB } from "./entities/transaction.entity";
+import { CACHE_MANAGER } from "@nestjs/cache-manager";
+import { Cache } from "cache-manager"; // ! Don't forget this import
 
 @Injectable()
 export class BridgeService {
   private logger = new Logger(BridgeService.name);
   constructor(
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly apiConfigService: ApiConfigService,
     @InjectRepository(CollectionB)
     private readonly collectionRepository: Repository<CollectionB>,
@@ -55,6 +60,52 @@ export class BridgeService {
 
   async findTransactionByHash(hash: string): Promise<TransactionB> {
     return this.transactionRepository.findOne({ where: { txHash: hash } });
+  }
+
+  async getNonceForSign(pubKey: string) {
+    // use redis cache to store the nonce for a specific address
+
+    if (await this.cacheManager.get(`${pubKey}`)) {
+      throw new HttpException("Message to sign already exists", HttpStatus.BAD_REQUEST);
+    }
+
+    // generate a random number
+    const nonce = Math.floor(Math.random() * 1000);
+
+    const generateTimestampInSeconds = Math.floor(Date.now() / 1000);
+
+    const messageToSign = `${pubKey.slice(0, 16)}${nonce}${generateTimestampInSeconds}`;
+
+    await this.cacheManager.set(`${pubKey}`, `${messageToSign}`, 60000);
+
+    return { messageToSign: messageToSign };
+  }
+
+  // process_Back (sol -> mvx)
+
+  async process_back(signature: string, SftAddress: string, amount: number, accessRequesterAddr: string) {
+    // check message and signature where signed in time (valid)
+    const realMessageToSign: string = await this.cacheManager.get(`${accessRequesterAddr}`);
+
+    if (!realMessageToSign) {
+      throw new HttpException("Message to sign not found. Time to sign the message expired", HttpStatus.BAD_REQUEST);
+    }
+
+    const publicKey = new PublicKey(accessRequesterAddr);
+    const signatureBuffer = Buffer.from(bs58.decode(signature));
+    const messageBuffer = Buffer.from(realMessageToSign);
+
+    // Verify the signature
+    const signatureValid = nacl.sign.detached.verify(messageBuffer, signatureBuffer, publicKey.toBuffer());
+
+    if (!signatureValid) {
+      throw new HttpException("Signature not valid", HttpStatus.BAD_REQUEST);
+    }
+
+    // check mvx sc has this address in lock contract
+    // check accessRequesterAddr has in balance the amount of sft
+    // trigger the unlock on mvx
+    // trigger the burn on solana
   }
 
   // process method
