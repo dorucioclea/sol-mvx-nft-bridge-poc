@@ -8,12 +8,13 @@ import { DataNft } from "@itheum/sdk-mx-data-nft/out";
 import { Button } from "../../ui/button";
 import { ArrowLeftRight } from "lucide-react";
 import { NftsContainer } from "../../components/Container/NftsContainer";
-import { lockNftTransaction } from "../../../lib/utils";
+import { getProvider, lockNftTransaction } from "../../../lib/utils";
 import axios from "axios";
 import { Address } from "@multiversx/sdk-core/out";
-import { Connection, PublicKey, clusterApiUrl } from "@solana/web3.js";
-import { Metaplex } from "@metaplex-foundation/js";
+import { Connection, PublicKey, Transaction, clusterApiUrl } from "@solana/web3.js";
+import { Metaplex, token, walletAdapterIdentity } from "@metaplex-foundation/js";
 import { SolDataNft } from "../Solana/SolNfts/SolDataNft";
+import { createBurnInstruction } from "@solana/spl-token";
 
 export const Bridge: React.FC = () => {
   const { address } = useGetAccountInfo();
@@ -40,7 +41,9 @@ export const Bridge: React.FC = () => {
   });
 
   const ironForgeRPC = "https://rpc.ironforge.network/devnet?apiKey=01HNJAHBRF5A8MXB0VYCMSHNCZ";
+
   const connection = new Connection(clusterApiUrl("devnet"));
+
   const mx = Metaplex.make(connection);
 
   async function bridgeSol(): Promise<any> {
@@ -83,10 +86,47 @@ export const Bridge: React.FC = () => {
   }, [trackTransactionStatus]);
 
   const handleSendTransaction = async () => {
-    if (address) {
-      const tx = await lockNftTransaction(selectedDataNft.collection, selectedDataNft.nonce, selectedDataNft.amount, address, storePublicKey, chainID);
-      setListTxSessionId(tx.sessionId);
-    }
+    // handle bridge between chains
+    // if (address) {
+    //   const tx = await lockNftTransaction(selectedDataNft.collection, selectedDataNft.nonce, selectedDataNft.amount, address, storePublicKey, chainID);
+    //   setListTxSessionId(tx.sessionId);
+    // }
+
+    const getMessageToSign = `https://sol-mvx-nft-bridge-poc-production.up.railway.app/getNonceToSign/${publicKey}`;
+
+    const { data } = await axios.get(getMessageToSign);
+
+    const { signature } = await window.solana.signMessage(new TextEncoder().encode(data.messageToSign), "utf8");
+
+    const provider = getProvider();
+
+    let tx = new Transaction().add(
+      createBurnInstruction(
+        new PublicKey(selectedDataNft.tokenAccount),
+        new PublicKey(selectedDataNft.mintAddress), // mint
+        new PublicKey(publicKey), // owner of token account
+        selectedDataNft.amount
+      )
+    );
+    let blockhash = (await connection.getLatestBlockhash("finalized")).blockhash;
+    tx.recentBlockhash = blockhash;
+    tx.feePayer = new PublicKey(publicKey);
+    const signedTx = await provider.signTransaction(tx);
+
+    const post = {
+      signature,
+      sftAddress: selectedDataNft.mintAddress,
+      amount: selectedDataNft.amount,
+      accessRequesterAddr: publicKey,
+      mvxAddress: address,
+    };
+
+    const url = "https://sol-mvx-nft-bridge-poc-production.up.railway.app/process_back";
+
+    const res = await axios.post(url, post);
+    console.log(res.data);
+
+    await connection.sendRawTransaction(signedTx.serialize());
   };
 
   useEffect(() => {
@@ -114,7 +154,11 @@ export const Bridge: React.FC = () => {
       const mintIds = data.result.value
         .map((item: any) => {
           if (item.account.data.parsed.info.tokenAmount.uiAmount > 0) {
-            return { mintAddress: item.account.data.parsed.info.mint, solBalance: item.account.data.parsed.info.tokenAmount.uiAmount };
+            return {
+              mintAddress: item.account.data.parsed.info.mint,
+              solBalance: item.account.data.parsed.info.tokenAmount.uiAmount,
+              tokenAccount: item.pubkey,
+            };
           }
         })
         .filter((mintId: string | undefined) => mintId !== undefined);
@@ -123,6 +167,7 @@ export const Bridge: React.FC = () => {
       for (const mintId of mintIds) {
         console.log(mintId);
         const newData: any = await mx.nfts().findByMint({ mintAddress: new PublicKey(mintId.mintAddress) });
+        console.log(newData);
         const { data } = await axios.get(newData.uri);
 
         const tokenIdentifierAttribute = data.attributes.find((attribute: any) => attribute.trait_type === "Token Identifier");
@@ -133,10 +178,11 @@ export const Bridge: React.FC = () => {
           const nonce = tokenNonceAttribute.value;
 
           const dataNft: DataNft = await DataNft.createFromApi({ nonce, tokenIdentifier });
-          _solDataNfts.push(new SolDataNft(dataNft, newData.metadataAddress.toString(), data, mintId.solBalance));
+          _solDataNfts.push(new SolDataNft(dataNft, newData.mint.address.toString(), data, mintId.solBalance, mintId.tokenAccount));
         }
       }
 
+      console.log(_solDataNfts);
       setSolDataNfts(_solDataNfts);
       setDataNfts(_dataNfts);
     }

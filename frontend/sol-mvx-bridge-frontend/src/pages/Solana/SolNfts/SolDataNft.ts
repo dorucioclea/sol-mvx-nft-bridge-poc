@@ -5,11 +5,13 @@ export class SolDataNft extends DataNft {
   mintAddress: string;
   metadata: any;
   balance: number;
+  tokenAccount: string;
 
-  constructor(dataNft: DataNft, mintAddress: string, metadata: any, solBalance: number) {
+  constructor(dataNft: DataNft, mintAddress: string, metadata: any, solBalance: number, tokenAccount: string) {
     super(dataNft);
     this.mintAddress = mintAddress;
     this.metadata = metadata;
     this.balance = solBalance;
+    this.tokenAccount = tokenAccount;
   }
 }
