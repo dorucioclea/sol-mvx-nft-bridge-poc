@@ -15,6 +15,7 @@ import { Connection, PublicKey, Transaction, clusterApiUrl } from "@solana/web3.
 import { Metaplex, token, walletAdapterIdentity } from "@metaplex-foundation/js";
 import { SolDataNft } from "../Solana/SolNfts/SolDataNft";
 import { createBurnInstruction } from "@solana/spl-token";
+import bs58 from "bs58";
 
 export const Bridge: React.FC = () => {
   const { address } = useGetAccountInfo();
@@ -86,47 +87,59 @@ export const Bridge: React.FC = () => {
   }, [trackTransactionStatus]);
 
   const handleSendTransaction = async () => {
-    // handle bridge between chains
-    // if (address) {
-    //   const tx = await lockNftTransaction(selectedDataNft.collection, selectedDataNft.nonce, selectedDataNft.amount, address, storePublicKey, chainID);
-    //   setListTxSessionId(tx.sessionId);
-    // }
+    if (selectedDataNft.mintAddress === undefined) {
+      if (address) {
+        const tx = await lockNftTransaction(selectedDataNft.collection, selectedDataNft.nonce, selectedDataNft.amount, address, storePublicKey, chainID);
+        setListTxSessionId(tx.sessionId);
+      }
+    } else {
+      // bridge back process
+      const getMessageToSign = `https://sol-mvx-nft-bridge-poc-production.up.railway.app/getNonceToSign/${publicKey}`;
 
-    const getMessageToSign = `https://sol-mvx-nft-bridge-poc-production.up.railway.app/getNonceToSign/${publicKey}`;
+      const { data } = await axios.get(getMessageToSign);
 
-    const { data } = await axios.get(getMessageToSign);
+      const { signature } = await window.solana.signMessage(new TextEncoder().encode(data.messageToSign), "utf8");
 
-    const { signature } = await window.solana.signMessage(new TextEncoder().encode(data.messageToSign), "utf8");
+      const signatureEncoded = bs58.encode(signature);
 
-    const provider = getProvider();
+      const provider = getProvider();
 
-    let tx = new Transaction().add(
-      createBurnInstruction(
-        new PublicKey(selectedDataNft.tokenAccount),
-        new PublicKey(selectedDataNft.mintAddress), // mint
-        new PublicKey(publicKey), // owner of token account
-        selectedDataNft.amount
-      )
-    );
-    let blockhash = (await connection.getLatestBlockhash("finalized")).blockhash;
-    tx.recentBlockhash = blockhash;
-    tx.feePayer = new PublicKey(publicKey);
-    const signedTx = await provider.signTransaction(tx);
+      let tx = new Transaction().add(
+        createBurnInstruction(
+          new PublicKey(selectedDataNft.tokenAccount),
+          new PublicKey(selectedDataNft.mintAddress), // mint
+          new PublicKey(publicKey), // owner of token account
+          selectedDataNft.amount
+        )
+      );
+      let blockhash = (await connection.getLatestBlockhash("finalized")).blockhash;
+      tx.recentBlockhash = blockhash;
+      tx.feePayer = new PublicKey(publicKey);
+      const signedTx = await provider.signTransaction(tx);
 
-    const post = {
-      signature,
-      sftAddress: selectedDataNft.mintAddress,
-      amount: selectedDataNft.amount,
-      accessRequesterAddr: publicKey,
-      mvxAddress: address,
-    };
+      const post = {
+        signature: signatureEncoded,
+        sftAddress: selectedDataNft.mintAddress,
+        amount: selectedDataNft.amount,
+        accessRequesterAddr: publicKey,
+        mvxAddress: address,
+      };
 
-    const url = "https://sol-mvx-nft-bridge-poc-production.up.railway.app/process_back";
+      const url = "https://sol-mvx-nft-bridge-poc-production.up.railway.app/process_back";
 
-    const res = await axios.post(url, post);
-    console.log(res.data);
+      const res = await axios.post(url, post);
 
-    await connection.sendRawTransaction(signedTx.serialize());
+      const processBackTxHash = res.data.Mvx.txHash;
+
+      await connection.sendRawTransaction(signedTx.serialize());
+
+      const statusQuery = `https://devnet-api.multiversx.com/transactions/${processBackTxHash}?fields=status
+    `;
+
+      const statusRes = await axios.get(statusQuery);
+
+      const status = statusRes.data.status;
+    }
   };
 
   useEffect(() => {
