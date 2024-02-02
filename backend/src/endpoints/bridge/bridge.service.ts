@@ -398,6 +398,14 @@ export class BridgeService {
           "trait_type": "Data Stream",
           "value": `${dataNft.dataStream}`,
         },
+        {
+          "trait_type": "Token Identifier",
+          "value": `${dataNft.collection}`,
+        },
+        {
+          "trait_type": "Token Nonce",
+          "value": `${dataNft.nonce}`,
+        },
       ],
     };
     return solJson;
