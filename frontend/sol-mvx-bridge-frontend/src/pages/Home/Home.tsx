@@ -35,9 +35,11 @@ export const Home: React.FC = () => {
             <Button className="bg-foreground text-background rounded-full" size="lg" onClick={() => navigate("/bridge")}>
               Bridge Data NFT
             </Button>
-            <Button variant="outline" size="lg" className="border-primary rounded-full">
-              View Docs
-            </Button>
+            <a href="https://github.com/Itheum/sol-mvx-nft-bridge-poc" target="_blank" rel="noreferrer noopener">
+              <Button variant="outline" size="lg" className="border-primary rounded-full">
+                View Docs
+              </Button>
+            </a>
           </div>
         </div>
       </div>

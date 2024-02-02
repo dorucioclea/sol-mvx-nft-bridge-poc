@@ -8,7 +8,7 @@ type StoreProviderProps = {
 
 export const StoreProvider: React.FC<StoreProviderProps> = (props) => {
   const { children } = props;
-  // const provider = getProvider();
+
   const { updatePublicKey, updateIsSolanaLoggedIn, updateSolanaBalance, isSolanaLoggedIn } = useUserStore((state) => state);
 
   const solanaPublicKey = localStorage.getItem("solanaPublicKey");
@@ -21,9 +21,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = (props) => {
       updatePublicKey("");
       updateIsSolanaLoggedIn(false);
     }
-  }, []);
 
-  useEffect(() => {
     (async () => {
       const connection = new Connection("https://api.devnet.solana.com");
 

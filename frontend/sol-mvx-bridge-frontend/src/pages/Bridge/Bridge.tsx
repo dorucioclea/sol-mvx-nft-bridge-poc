@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { CardComponent } from "../../components/Card/CardComponent";
 import mvxLogo from "../../assets/mvxLogo.png";
 import solLogo from "../../assets/solLogo.png";
+import mvxText from "../../assets/mvxText.png";
+import solText from "../../assets/solText.png";
 import { useGetAccountInfo, useGetLoginInfo, useGetNetworkConfig, useGetPendingTransactions, useTrackTransactionStatus } from "@multiversx/sdk-dapp/hooks";
 import { useUserStore } from "../../store/user";
 import { DataNft } from "@itheum/sdk-mx-data-nft/out";
@@ -14,9 +16,10 @@ import axios from "axios";
 export const Bridge: React.FC = () => {
   const { address } = useGetAccountInfo();
   const { chainID } = useGetNetworkConfig();
-  const { tokenLogin } = useGetLoginInfo();
+  const { tokenLogin, isLoggedIn: isMvxLoggedIn } = useGetLoginInfo();
   const { pendingTransactions, hasPendingTransactions } = useGetPendingTransactions();
   const storePublicKey = useUserStore((state) => state.publicKey);
+  const isSolanaLoggedIn = useUserStore((state) => state.isSolanaLoggedIn);
   const solBalance = useUserStore((state) => state.solanaBalance);
 
   const [dataNfts, setDataNfts] = useState<Array<DataNft>>([]);
@@ -34,10 +37,10 @@ export const Bridge: React.FC = () => {
     "ZXJkMTdlZzQzcjN4dmVudWMweWF5YXVocWYwNjZsdW01MnBobnl0dncwdG52eTY3N3VwN2NhZXNlN2d2M2c.YUhSMGNITTZMeTkxZEdsc2N5NXRkV3gwYVhabGNuTjRMbU52YlEuNDFkNjMwY2NlMzBhMmY2MDgzY2M3YmM0ODA2MThkY2M4ZGUwMGUyZDYwOTIzZWRkZWM3YjBhOTgzOTUwNGE3NS43MjAwLmV5SjBhVzFsYzNSaGJYQWlPakUzTURZMU5UTTVPVEI5.d10c2b59981927cc2b43ebdeab6c9ee93c10a4d064c474188821761df1730f6c3d23634d2622afcfeeb5cdb402b4664e2525a591250856dc3ab3531cabb07907";
 
   async function bridgeSol(): Promise<any> {
-    console.log("Before req");
+    // console.log("Before req");
     try {
       const url = "https://sol-mvx-nft-bridge-poc-production.up.railway.app/process";
-      console.log("Before post");
+      // console.log("Before post");
       const { data } = await axios.post(
         url,
         {
@@ -49,7 +52,7 @@ export const Bridge: React.FC = () => {
           },
         }
       );
-      console.log("Inside post");
+      // console.log("Inside post");
       return data;
     } catch (error) {
       console.error(error);
@@ -97,7 +100,7 @@ export const Bridge: React.FC = () => {
     })();
   }, [listTxStatus]);
 
-  console.log(address);
+  // console.log(address);
   // console.log(selectedDataNft);
 
   return (
@@ -106,7 +109,9 @@ export const Bridge: React.FC = () => {
         <CardComponent
           title="from"
           imgSrc={mvxLogo}
+          logo={mvxText}
           alt="MultiversX Logo"
+          isLoggedIn={isMvxLoggedIn}
           dataNfts={dataNfts}
           selectedDataNfts={selectedDataNfts}
           setSelectedDataNfts={setSelectedDataNfts}
@@ -117,7 +122,9 @@ export const Bridge: React.FC = () => {
         <CardComponent
           title="to"
           imgSrc={solLogo}
+          logo={solText}
           alt="Solana Logo"
+          isLoggedIn={isSolanaLoggedIn}
           dataNfts={[]}
           selectedDataNfts={selectedDataNfts}
           setSelectedDataNfts={setSelectedDataNfts}
