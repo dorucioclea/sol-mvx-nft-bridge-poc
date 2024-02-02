@@ -10,7 +10,6 @@ import { ArrowLeftRight } from "lucide-react";
 import { NftsContainer } from "../../components/Container/NftsContainer";
 import { lockNftTransaction } from "../../../lib/utils";
 import axios from "axios";
-import { Address } from "@multiversx/sdk-core/out";
 
 export const Bridge: React.FC = () => {
   const { address } = useGetAccountInfo();

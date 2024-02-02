@@ -25,24 +25,28 @@ function App() {
           <div className="flex flex-col min-h-[100svh] text-white backdrop-blur-xl">
             <Header />
             <BlockchainWrapper>
-              <Content>
+              <>
                 <Routes>
                   <Route path="/" element={<Home />} />
-                  <Route path="bridge" element={<Bridge />} />
-
-                  <Route path="sol" element={<Outlet />}>
-                    <Route path="" element={<SolHome />} />
-                    <Route path="solLogin" element={<UnlockSol />} />
-                    <Route path="solNfts" element={<SolNfts />} />
-                    <Route path="solInventory" element={<SolInventory />} />
-                  </Route>
-                  <Route path="mvx" element={<Outlet />}>
-                    <Route path="" element={<MvxHome />} />
-                    <Route path="mvxLogin" element={<UnlockMvx />} />
-                    <Route path="mvxNfts" element={<MultiversXNfts />} />
-                  </Route>
                 </Routes>
-              </Content>
+                <Content>
+                  <Routes>
+                    <Route path="bridge" element={<Bridge />} />
+
+                    <Route path="sol" element={<Outlet />}>
+                      <Route path="" element={<SolHome />} />
+                      <Route path="solLogin" element={<UnlockSol />} />
+                      <Route path="solNfts" element={<SolNfts />} />
+                      <Route path="solInventory" element={<SolInventory />} />
+                    </Route>
+                    <Route path="mvx" element={<Outlet />}>
+                      <Route path="" element={<MvxHome />} />
+                      <Route path="mvxLogin" element={<UnlockMvx />} />
+                      <Route path="mvxNfts" element={<MultiversXNfts />} />
+                    </Route>
+                  </Routes>
+                </Content>
+              </>
             </BlockchainWrapper>
             <Footer />
           </div>
