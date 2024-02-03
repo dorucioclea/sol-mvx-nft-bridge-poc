@@ -339,19 +339,19 @@ export class BridgeService {
 
       const storedCollection = await this.createCollection(collectionDto);
 
-      console.log(storedCollection);
-
       if (!storedCollection) {
         throw new HttpException("Error storing collection", HttpStatus.INTERNAL_SERVER_ERROR);
       }
     }
 
     collection = await this.findCollectionByTokenIdentifierAndNonce(lockEvent.tokenIdentifier, lockEvent.nonce);
-    const sftPrivateKeyArray = collection.sftPrivateKey.split(",").map(Number);
-    const sftKeyPair = umi.eddsa.createKeypairFromSecretKey(Uint8Array.from(sftPrivateKeyArray));
+    // const sftPrivateKeyArray = collection.sftPrivateKey.split(",").map(Number);
+    // const sftKeyPair = umi.eddsa.createKeypairFromSecretKey(Uint8Array.from(sftPrivateKeyArray));
+
+    console.log(collection);
 
     await mintV1(umi, {
-      mint: sftKeyPair.publicKey,
+      mint: publicKey(collection.sftPublicKey),
       authority: signerKp,
       amount: lockEvent.amount,
       tokenOwner: fromWeb3JsPublicKey(recipientPubkey),
@@ -365,9 +365,7 @@ export class BridgeService {
     });
 
     this.logger.log(
-      `Transaction ${txHash} processed successfully. Collection created: ${collection.id}, ${
-        collection.tokenIdentifier
-      }, ${collection.nonce}, Solana mint: ${sftKeyPair.publicKey.toString()}  `
+      `Transaction ${txHash} processed successfully. Collection created: ${collection.id}, ${collection.tokenIdentifier}, ${collection.nonce}, Solana mint: ${collection.sftPublicKey}  `
     );
     return collection;
   }
