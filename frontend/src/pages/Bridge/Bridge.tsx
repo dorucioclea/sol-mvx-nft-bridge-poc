@@ -10,7 +10,7 @@ import { DataNft } from "@itheum/sdk-mx-data-nft/out";
 import { Button } from "../../ui/button";
 import { ArrowLeftRight } from "lucide-react";
 import { NftsContainer } from "../../components/Container/NftsContainer";
-import { getProvider, lockNftTransaction } from "../../../lib/utils";
+import { getProvider, lockNftTransaction, sleep } from "../../../lib/utils";
 import axios from "axios";
 import { toast } from "sonner";
 import { Toaster } from "../../ui/sonner";
@@ -51,6 +51,7 @@ export const Bridge: React.FC = () => {
   const connection = new Connection(clusterApiUrl("devnet"));
 
   const mx = Metaplex.make(connection);
+  const { isBridgeLoading } = useUserStore((state) => state);
 
   async function bridgeSol(): Promise<any> {
     // console.log("Before req");
@@ -157,10 +158,9 @@ export const Bridge: React.FC = () => {
       // console.log(_dataNfts);
       setDataNfts(_dataNfts);
     }
-    if (!hasPendingTransactions) {
-      fetchData();
-    }
-  }, [hasPendingTransactions]);
+    sleep(1000);
+    fetchData();
+  }, [hasPendingTransactions, isBridgeLoading]);
 
   useEffect(() => {
     (async () => {

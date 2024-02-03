@@ -39,7 +39,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = (props) => {
 
   useEffect(() => {
     (async () => {
-      await sleep(3000);
+      await sleep(4000);
       await getAllTokenForAddress();
     })();
   }, [isBridgeLoading]);
@@ -98,6 +98,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = (props) => {
       return {
         mint: item.account.data.parsed.info.mint,
         tokenAccount: item.pubkey,
+        balance: item.account.data.parsed.info.tokenAmount.uiAmount,
       };
     });
     const _dataNft: any = [];
@@ -107,6 +108,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = (props) => {
       const { data } = await axios.get(newData.uri);
       if (newData.model === "sft") {
         newData.tokenAccount = mintId.tokenAccount;
+        newData.balance = mintId.balance;
         _dataNft.push({ newData, dataNftsMetadata: data });
       }
       // console.log(newData.metadataAddress.toString());

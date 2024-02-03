@@ -54,8 +54,12 @@ export const NftsContainer: React.FC<NftsContainerProps> = (props) => {
                   <>
                     <img src={nft.dataNftsMetadata.image} alt={nft.dataNftsMetadata.image} className="w-[6rem] mx-auto" />
                     <span className="text-sm line-clamp-2 h-[3.5rem] pt-2">{nft.dataNftsMetadata.name}</span>
-                    <span className="text-xs text-muted-foreground line-clamp-2 h-[2.4rem]">
-                      Available supply: {nft.newData.mint.supply.basisPoints.toString()}
+                    <span
+                      className="text-xs text-muted-foreground line-clamp-2 h-[2.4rem]"
+                      onClick={() => {
+                        console.log(nft);
+                      }}>
+                      Available supply: {nft.newData.balance}
                     </span>
                     <Input
                       type="number"

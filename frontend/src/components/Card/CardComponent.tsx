@@ -63,7 +63,7 @@ export const CardComponent: React.FC<CardComponentProps> = (props) => {
       <CardFooter className="flex flex-wrap border rounded-md m-1.5 h-[20rem] overflow-y-scroll gap-2 py-3">
         {isLoggedIn ? (
           dataNfts
-            ?.filter((datanft) => Number(datanft.newData?.mint.supply.basisPoints.toString()) > 0 || !isSolDataNfts)
+            ?.filter((datanft) => Number(datanft.newData?.balance) > 0 || !isSolDataNfts)
             .map((dataNft, index) => (
               <div
                 key={index}

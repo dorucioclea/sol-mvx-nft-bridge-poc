@@ -64,7 +64,7 @@ export async function lockNftTransaction(
       .addArg(new TokenIdentifierValue(tokenIdentifier))
       .addArg(new U64Value(nonce))
       .addArg(new BigUIntValue(amount))
-      .addArg(new AddressValue(new Address("erd1qqqqqqqqqqqqqpgqqhr8zr3h02nlk5lse3jus7dpwez9w4lyw3wq0c0jl0")))
+      .addArg(new AddressValue(new Address("erd1qqqqqqqqqqqqqpgq9nf40dfhg4c7z3arjamjrtxpw8fc7w4qw3wqrssw95")))
       .addArg(new StringValue("lock"))
       .addArg(new StringValue(solanaPubKey))
       .build(),
