@@ -5,6 +5,10 @@ import { Button } from "../../../ui/button";
 import bs58 from "bs58";
 import { Card, CardContent, CardHeader } from "../../../ui/card";
 import { SolInventoryModal } from "./components/SolInventoryModal";
+import solFmLogo from "../../../assets/solanaFm.png";
+import solLogo from "../../../assets/solLogo.png";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../../ui/tooltip";
+import { TooltipComponent } from "../../../components/Tooltip/TooltipComponent";
 
 export const SolInventory: React.FC = () => {
   const { publicKey } = useUserStore((state) => state);
@@ -51,7 +55,29 @@ export const SolInventory: React.FC = () => {
                   </div>
                   <div className="flex justify-between">
                     <span>Token address:&nbsp;</span>
-                    <span className="text-muted-foreground">
+                    <span className="flex items-center text-muted-foreground gap-0.5">
+                      <TooltipComponent
+                        tooltipTrigger={
+                          <a
+                            href={`https://solana.fm/address/${dataNft.newData.mint.address.toString()}?cluster=mainnet-alpha`}
+                            target="_blank"
+                            rel="noreferrer noopener">
+                            <img src={solFmLogo} alt="solFmLogo" className="w-5 h-5" />
+                          </a>
+                        }
+                        tooltipContent="open in SolanaFm"
+                      />
+                      <TooltipComponent
+                        tooltipTrigger={
+                          <a
+                            href={`https://explorer.solana.com/address/${dataNft.newData.mint.address.toString()}?cluster=devnet`}
+                            target="_blank"
+                            rel="noreferrer noopener">
+                            <img src={solLogo} alt="solFmLogo" className="w-4 h-4" />
+                          </a>
+                        }
+                        tooltipContent="open in Solana Explorer"
+                      />
                       {dataNft.newData.mint.address.toString().substring(0, 4)}...
                       {dataNft.newData.mint.address
                         .toString()
