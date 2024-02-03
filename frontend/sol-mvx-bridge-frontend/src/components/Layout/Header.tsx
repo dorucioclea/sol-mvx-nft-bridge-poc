@@ -12,6 +12,7 @@ import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { clearMvxSessionStorage, clearSolSessionStorage, getProvider } from "../../../lib/utils";
 import mvxLogo from "../../assets/mvxLogo.png";
 import solLogo from "../../assets/solLogo.png";
+import BigNumber from "bignumber.js";
 
 export const Header: React.FC = () => {
   const isMxLoggedIn = useGetIsLoggedIn();
@@ -72,7 +73,10 @@ export const Header: React.FC = () => {
             <DropdownComponent
               triggerButton={
                 <Button className="bg-transparent font-semibold" variant="ghost">
-                  {Number(formatAmount({ input: balance ?? 0 })).toFixed(3)} EGLD
+                  {BigNumber(balance)
+                    .div(10 ** 18)
+                    .toFixed(3)}
+                  EGLD
                   <Avatar className="w-8 h-8 ml-2">
                     <AvatarImage src={mvxAvatar} alt="mvxAvatar" />
                     <AvatarFallback>MVX</AvatarFallback>

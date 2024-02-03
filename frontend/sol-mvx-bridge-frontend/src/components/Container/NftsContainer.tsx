@@ -4,15 +4,16 @@ import { DataNft } from "@itheum/sdk-mx-data-nft/out";
 import { Input } from "../../ui/input";
 
 type NftsContainerProps = {
-  selectedNfts: Array<DataNft>;
+  isMvxDataNfts: boolean;
+  selectedNfts: Array<any>;
   amountToBridge: number;
   setAmountToBridge: React.Dispatch<React.SetStateAction<number>>;
-  selectedNft: Record<any, DataNft>;
+  selectedNft: Record<any, any>;
   setSelectedNft: React.Dispatch<React.SetStateAction<Record<any, any>>>;
 };
 
 export const NftsContainer: React.FC<NftsContainerProps> = (props) => {
-  const { selectedNfts, amountToBridge, setAmountToBridge, selectedNft, setSelectedNft } = props;
+  const { isMvxDataNfts, selectedNfts, amountToBridge, setAmountToBridge, selectedNft, setSelectedNft } = props;
   // console.log(selectedNft);
 
   useEffect(() => {
@@ -20,6 +21,7 @@ export const NftsContainer: React.FC<NftsContainerProps> = (props) => {
       setSelectedNft({ ...selectedNfts[0], amount: amountToBridge });
     }
   }, [amountToBridge]);
+  console.log(selectedNft);
 
   return (
     <Card className="bg-transparent">
@@ -35,16 +37,35 @@ export const NftsContainer: React.FC<NftsContainerProps> = (props) => {
           ) : (
             selectedNfts?.map((nft, index) => (
               <div key={index} className="w-[15rem] h-[16rem] py-2 border rounded-xl px-3 line-clamp-1">
-                <img src={nft.nftImgUrl} alt={nft.tokenIdentifier} className="w-[6rem] mx-auto" />
-                <span className="text-sm line-clamp-2 h-[3.5rem] pt-2">{nft.title}</span>
-                <span className="text-xs text-muted-foreground line-clamp-2 h-[2.4rem]">Available supply: {Number(nft.balance)}</span>
-                <Input
-                  type="number"
-                  placeholder="Amount to send"
-                  className="w-[10rem]"
-                  onChange={(e) => setAmountToBridge(Number(e.target.value))}
-                  max={Number(nft.balance)}
-                />
+                {isMvxDataNfts ? (
+                  <>
+                    <img src={nft.nftImgUrl} alt={nft.tokenIdentifier} className="w-[6rem] mx-auto" />
+                    <span className="text-sm line-clamp-2 h-[3.5rem] pt-2">{nft.title}</span>
+                    <span className="text-xs text-muted-foreground line-clamp-2 h-[2.4rem]">Available supply: {Number(nft.balance)}</span>
+                    <Input
+                      type="number"
+                      placeholder="Amount to send"
+                      className="w-[10rem]"
+                      onChange={(e) => setAmountToBridge(Number(e.target.value))}
+                      max={Number(nft.balance)}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <img src={nft.dataNftsMetadata.image} alt={nft.dataNftsMetadata.image} className="w-[6rem] mx-auto" />
+                    <span className="text-sm line-clamp-2 h-[3.5rem] pt-2">{nft.dataNftsMetadata.name}</span>
+                    <span className="text-xs text-muted-foreground line-clamp-2 h-[2.4rem]">
+                      Available supply: {nft.newData.mint.supply.basisPoints.toString()}
+                    </span>
+                    <Input
+                      type="number"
+                      placeholder="Amount to send"
+                      className="w-[10rem]"
+                      onChange={(e) => setAmountToBridge(Number(e.target.value))}
+                      max={Number(nft.newData.mint.supply.basisPoints.toString())}
+                    />
+                  </>
+                )}
               </div>
             ))
           )}
