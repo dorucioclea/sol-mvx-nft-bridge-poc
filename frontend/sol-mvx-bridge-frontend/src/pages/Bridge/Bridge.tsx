@@ -12,6 +12,8 @@ import { ArrowLeftRight } from "lucide-react";
 import { NftsContainer } from "../../components/Container/NftsContainer";
 import { lockNftTransaction } from "../../../lib/utils";
 import axios from "axios";
+import { toast } from "sonner";
+import { Toaster } from "../../ui/sonner";
 
 export const Bridge: React.FC = () => {
   const { address } = useGetAccountInfo();
@@ -44,6 +46,7 @@ export const Bridge: React.FC = () => {
       await updateIsBridgeLoading(true);
       const url = "https://sol-mvx-nft-bridge-poc-production.up.railway.app/process";
       // console.log("Before post");
+      await toast.info("Processing transaction on Solana", { duration: 7000 });
       const { data } = await axios.post(
         url,
         {
@@ -56,9 +59,11 @@ export const Bridge: React.FC = () => {
         }
       );
       await updateIsBridgeLoading(false);
+      await toast.success("Transaction successful", { duration: 7000 });
       console.log(data);
       return data;
     } catch (error) {
+      await toast.error("Transaction failed", { duration: 7000 });
       console.error(error);
       return {};
     }
@@ -70,6 +75,7 @@ export const Bridge: React.FC = () => {
     if (!pendingTransactions[listTxSessionId]) return;
     const transactionHash = pendingTransactions[listTxSessionId].transactions[0].hash;
     setListTxHash(transactionHash);
+    setSelectedDataNfts([]);
     // bridgeSol(tokenLogin?.nativeAuthToken, listTxHash);
     // console.log(pendingTransactions);
   }, [pendingTransactions]);
@@ -143,6 +149,7 @@ export const Bridge: React.FC = () => {
         setSelectedNft={setSelectedDataNft}
         setAmountToBridge={setAmountToBridge}
       />
+      <Toaster position="bottom-right" richColors closeButton />
     </div>
   );
 };

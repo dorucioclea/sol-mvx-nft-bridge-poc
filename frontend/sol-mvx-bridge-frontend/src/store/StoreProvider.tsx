@@ -39,7 +39,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = (props) => {
 
   useEffect(() => {
     (async () => {
-      await sleep(2000);
+      await sleep(3000);
       await getAllTokenForAddress();
     })();
   }, [isBridgeLoading]);
