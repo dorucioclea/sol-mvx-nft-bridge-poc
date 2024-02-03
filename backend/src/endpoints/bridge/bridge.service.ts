@@ -101,143 +101,149 @@ export class BridgeService {
 
   async process_back(
     signature: string,
-    SftAddress: string,
+    sftAddress: string,
     amount: number,
     accessRequesterAddr: string,
     mvxAddress: string
   ) {
     // check message and signature where signed in time (valid)
-    const realMessageToSign: string = await this.cacheManager.get(`${accessRequesterAddr}`);
-    if (!realMessageToSign) {
-      throw new HttpException("Message to sign not found. Time to sign the message expired", HttpStatus.BAD_REQUEST);
-    }
-    const publicKey = new PublicKey(accessRequesterAddr);
-    const signatureBuffer = Buffer.from(bs58.decode(signature));
-    const messageBuffer = Buffer.from(realMessageToSign);
-    // Verify the signature
-    const signatureValid = nacl.sign.detached.verify(messageBuffer, signatureBuffer, publicKey.toBuffer());
-    if (!signatureValid) {
-      throw new HttpException("Signature not valid", HttpStatus.BAD_REQUEST);
-    }
+    try {
+      const realMessageToSign: string = await this.cacheManager.get(`${accessRequesterAddr}`);
+      if (!realMessageToSign) {
+        throw new HttpException("Message to sign not found. Time to sign the message expired", HttpStatus.BAD_REQUEST);
+      }
+      const publicKey = new PublicKey(accessRequesterAddr);
+      const signatureBuffer = Buffer.from(bs58.decode(signature));
+      const messageBuffer = Buffer.from(realMessageToSign);
+      // Verify the signature
+      const signatureValid = nacl.sign.detached.verify(messageBuffer, signatureBuffer, publicKey.toBuffer());
+      if (!signatureValid) {
+        throw new HttpException("Signature not valid", HttpStatus.BAD_REQUEST);
+      }
 
-    // check if the collection exists
+      // check if the collection exists
 
-    const collection = await this.findCollectionBySftPublicKey(SftAddress);
+      const collection = await this.findCollectionBySftPublicKey(sftAddress);
 
-    if (!collection) {
-      throw new HttpException("Collection not found", HttpStatus.BAD_REQUEST);
-    }
-    // check mvx sc has balance to unlock
+      if (!collection) {
+        throw new HttpException("Collection not found", HttpStatus.BAD_REQUEST);
+      }
+      // check mvx sc has balance to unlock
 
-    const query = `${returnAPIEndpoint("ED")}/accounts/erd1qqqqqqqqqqqqqpgq9nf40dfhg4c7z3arjamjrtxpw8fc7w4qw3wqrssw95/nfts`;
+      const query = `${returnAPIEndpoint("ED")}/accounts/erd1qqqqqqqqqqqqqpgq9nf40dfhg4c7z3arjamjrtxpw8fc7w4qw3wqrssw95/nfts`;
 
-    const response = await axios.get(query);
+      const response = await axios.get(query);
 
-    DataNft.setNetworkConfig(this.apiConfigService.getItheumSdkEnvironment());
+      DataNft.setNetworkConfig(this.apiConfigService.getItheumSdkEnvironment());
 
-    const dataNfts: DataNft[] = DataNft.createFromApiResponseOrBulk(response.data);
+      const dataNfts: DataNft[] = DataNft.createFromApiResponseOrBulk(response.data);
 
-    const dataNft = dataNfts.find(
-      (nft) =>
-        nft.collection === collection.tokenIdentifier && nft.nonce === collection.nonce && Number(nft.balance) >= amount
-    );
+      const dataNft = dataNfts.find(
+        (nft) =>
+          nft.collection === collection.tokenIdentifier &&
+          nft.nonce === collection.nonce &&
+          Number(nft.balance) >= amount
+      );
 
-    // check accessRequesterAddr has in balance the amount of sft
+      // check accessRequesterAddr has in balance the amount of sft
 
-    const solanaApiUrl = process.env.IRON_FORGE_API_URL;
+      const solanaApiUrl = process.env.IRON_FORGE_API_URL;
 
-    const postData = {
-      jsonrpc: "2.0",
-      id: 1,
-      method: "getTokenAccountsByOwner",
-      params: [
-        accessRequesterAddr,
-        {
-          mint: SftAddress,
+      const postData = {
+        jsonrpc: "2.0",
+        id: 1,
+        method: "getTokenAccountsByOwner",
+        params: [
+          accessRequesterAddr,
+          {
+            mint: sftAddress,
+          },
+          {
+            encoding: "jsonParsed",
+          },
+        ],
+      };
+
+      const solanaBalanceResponse = await axios.post(`${solanaApiUrl}=${process.env.IRON_FORGE_API_KEY}`, postData);
+
+      const solanaSftBalance: number =
+        solanaBalanceResponse.data.result.value[0].account.data.parsed.info.tokenAmount.uiAmount;
+
+      if (solanaSftBalance < amount) {
+        throw new HttpException("Not enough balance", HttpStatus.BAD_REQUEST);
+      }
+
+      // burn on sol
+
+      const umi = createUmi("https://api.devnet.solana.com");
+
+      const mintPKString = process.env.PRIVATE_KEY;
+      const mintPKArray = mintPKString.split(",").map(Number);
+
+      const myMintKeypair = Keypair.fromSecretKey(Uint8Array.from(mintPKArray));
+
+      console.log(myMintKeypair.publicKey.toString());
+
+      const keypair = umi.eddsa.createKeypairFromSecretKey(myMintKeypair.secretKey);
+
+      const signerKp = createSignerFromKeypair(umi, fromWeb3JsKeypair(myMintKeypair));
+
+      umi.use(keypairIdentity(keypair)).use(mplTokenMetadata());
+
+      // await delegateStandardV1(umi, {
+      //   mint: publicKey(SftAddress),
+      //   tokenOwner: publicKey(accessRequesterAddr),
+      //   authority: signerKp,
+      //   delegate: publicKey(signerKp.publicKey),
+      //   tokenStandard: TokenStandard.NonFungible,
+      // }).sendAndConfirm(umi);
+
+      // await burnV1(umi, {
+      //   mint: publicKey(SftAddress),
+      //   authority: signerKp,
+      //   tokenOwner: publicKey(accessRequesterAddr),
+      //   tokenStandard: TokenStandard.NonFungible,
+      // }).sendAndConfirm(umi);
+
+      // trigger the unlock on mvx
+
+      const array = Uint8Array.from(Buffer.from(process.env.ERD_ADMIN_ADDRESS, "hex"));
+
+      const adminSecretKey = new UserSecretKey(array);
+      const adminSigner = new UserSigner(adminSecretKey);
+
+      const networkProvider = new ApiNetworkProvider(returnAPIEndpoint("ED"));
+
+      const onlineAcc = await networkProvider.getAccount(adminSecretKey.generatePublicKey().toAddress());
+
+      const tx = unlockTx(
+        onlineAcc.address.bech32(),
+        "erd1qqqqqqqqqqqqqpgq9nf40dfhg4c7z3arjamjrtxpw8fc7w4qw3wqrssw95",
+        mvxAddress,
+        dataNft.collection,
+        dataNft.nonce,
+        amount,
+        "D"
+      );
+
+      tx.setNonce(onlineAcc.nonce);
+      const serialized = tx.serializeForSigning();
+      const signatureTx = await adminSigner.sign(serialized);
+      tx.applySignature(signatureTx);
+
+      const txHash = await networkProvider.sendTransaction(tx);
+      return {
+        Solana: {
+          burned: amount,
         },
-        {
-          encoding: "jsonParsed",
+        Mvx: {
+          unlocked: amount,
+          txHash: txHash,
         },
-      ],
-    };
-
-    const solanaBalanceResponse = await axios.post(`${solanaApiUrl}=${process.env.IRON_FORGE_API_KEY}`, postData);
-
-    const solanaSftBalance: number =
-      solanaBalanceResponse.data.result.value[0].account.data.parsed.info.tokenAmount.uiAmount;
-
-    if (solanaSftBalance < amount) {
-      throw new HttpException("Not enough balance", HttpStatus.BAD_REQUEST);
+      };
+    } catch (e) {
+      console.log(e);
     }
-
-    // burn on sol
-
-    const umi = createUmi("https://api.devnet.solana.com");
-
-    const mintPKString = process.env.PRIVATE_KEY;
-    const mintPKArray = mintPKString.split(",").map(Number);
-
-    const myMintKeypair = Keypair.fromSecretKey(Uint8Array.from(mintPKArray));
-
-    console.log(myMintKeypair.publicKey.toString());
-
-    const keypair = umi.eddsa.createKeypairFromSecretKey(myMintKeypair.secretKey);
-
-    const signerKp = createSignerFromKeypair(umi, fromWeb3JsKeypair(myMintKeypair));
-
-    umi.use(keypairIdentity(keypair)).use(mplTokenMetadata());
-
-    // await delegateStandardV1(umi, {
-    //   mint: publicKey(SftAddress),
-    //   tokenOwner: publicKey(accessRequesterAddr),
-    //   authority: signerKp,
-    //   delegate: publicKey(signerKp.publicKey),
-    //   tokenStandard: TokenStandard.NonFungible,
-    // }).sendAndConfirm(umi);
-
-    // await burnV1(umi, {
-    //   mint: publicKey(SftAddress),
-    //   authority: signerKp,
-    //   tokenOwner: publicKey(accessRequesterAddr),
-    //   tokenStandard: TokenStandard.NonFungible,
-    // }).sendAndConfirm(umi);
-
-    // trigger the unlock on mvx
-
-    const array = Uint8Array.from(Buffer.from(process.env.ERD_ADMIN_ADDRESS, "hex"));
-
-    const adminSecretKey = new UserSecretKey(array);
-    const adminSigner = new UserSigner(adminSecretKey);
-
-    const networkProvider = new ApiNetworkProvider(returnAPIEndpoint("ED"));
-
-    const onlineAcc = await networkProvider.getAccount(adminSecretKey.generatePublicKey().toAddress());
-
-    const tx = unlockTx(
-      onlineAcc.address.bech32(),
-      "erd1qqqqqqqqqqqqqpgq9nf40dfhg4c7z3arjamjrtxpw8fc7w4qw3wqrssw95",
-      mvxAddress,
-      dataNft.collection,
-      dataNft.nonce,
-      amount,
-      "D"
-    );
-
-    tx.setNonce(onlineAcc.nonce);
-    const serialized = tx.serializeForSigning();
-    const signatureTx = await adminSigner.sign(serialized);
-    tx.applySignature(signatureTx);
-
-    const txHash = await networkProvider.sendTransaction(tx);
-    return {
-      Solana: {
-        burned: amount,
-      },
-      Mvx: {
-        unlocked: amount,
-        txHash: txHash,
-      },
-    };
   }
 
   // process method
@@ -333,19 +339,19 @@ export class BridgeService {
 
       const storedCollection = await this.createCollection(collectionDto);
 
-      console.log(storedCollection);
-
       if (!storedCollection) {
         throw new HttpException("Error storing collection", HttpStatus.INTERNAL_SERVER_ERROR);
       }
     }
 
     collection = await this.findCollectionByTokenIdentifierAndNonce(lockEvent.tokenIdentifier, lockEvent.nonce);
-    const sftPrivateKeyArray = collection.sftPrivateKey.split(",").map(Number);
-    const sftKeyPair = umi.eddsa.createKeypairFromSecretKey(Uint8Array.from(sftPrivateKeyArray));
+    // const sftPrivateKeyArray = collection.sftPrivateKey.split(",").map(Number);
+    // const sftKeyPair = umi.eddsa.createKeypairFromSecretKey(Uint8Array.from(sftPrivateKeyArray));
+
+    console.log(collection);
 
     await mintV1(umi, {
-      mint: sftKeyPair.publicKey,
+      mint: publicKey(collection.sftPublicKey),
       authority: signerKp,
       amount: lockEvent.amount,
       tokenOwner: fromWeb3JsPublicKey(recipientPubkey),
@@ -359,9 +365,7 @@ export class BridgeService {
     });
 
     this.logger.log(
-      `Transaction ${txHash} processed successfully. Collection created: ${collection.id}, ${
-        collection.tokenIdentifier
-      }, ${collection.nonce}, Solana mint: ${sftKeyPair.publicKey.toString()}  `
+      `Transaction ${txHash} processed successfully. Collection created: ${collection.id}, ${collection.tokenIdentifier}, ${collection.nonce}, Solana mint: ${collection.sftPublicKey}  `
     );
     return collection;
   }
