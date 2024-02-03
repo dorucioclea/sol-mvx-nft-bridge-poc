@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import landing from "../../assets/landing.png";
-import dataNft from "../../assets/dataNft.png";
+import mvxDataNft from "../../assets/dataNft.png";
 import { motion, useAnimation } from "framer-motion";
 import { Button } from "../../ui/button";
 import { useNavigate } from "react-router-dom";
@@ -45,7 +45,7 @@ export const Home: React.FC = () => {
       </div>
       <div className="relative w-[100%] z-0">
         <motion.div className="absolute top-[60%] left-[35%] z-30" animate={controls}>
-          <motion.img src={dataNft} alt="dataNft" />
+          <motion.img src={dataNft} alt="mvxDataNft" />
         </motion.div>
         <img src={landing} alt="solCircle" className="sticky w-full bg-cover bg-center h-[93svh]" />
       </div>

@@ -58,7 +58,7 @@ export const CardComponent: React.FC<CardComponentProps> = (props) => {
         {isLoggedIn ? (
           dataNfts?.map((dataNft, index) => (
             <div key={index} onClick={() => updateDataNfts(dataNft)}>
-              <DataNftsCard dataNft={dataNft} isSelected={isSelected(dataNft)} />
+              <DataNftsCard mvxDataNft={dataNft} isSelected={isSelected(dataNft)} />
             </div>
           ))
         ) : (
