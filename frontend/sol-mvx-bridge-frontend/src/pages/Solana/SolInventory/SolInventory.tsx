@@ -1,10 +1,8 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { useUserStore } from "../../../store/user";
 import axios from "axios";
 import { Button } from "../../../ui/button";
 import bs58 from "bs58";
-import { clusterApiUrl, Connection, PublicKey } from "@solana/web3.js";
-import { Metaplex } from "@metaplex-foundation/js";
 import { Card, CardContent, CardHeader } from "../../../ui/card";
 import { SolInventoryModal } from "./components/SolInventoryModal";
 
@@ -36,7 +34,7 @@ export const SolInventory: React.FC = () => {
 
   return (
     <div className="flex flex-col justify-center items-left gap-4 w-full my-3">
-      <span className="text-3xl font-semibold">My Data NFT's</span>
+      <span className="text-3xl font-semibold font-epilogue">My Data NFT's</span>
       <div className="flex flex-row flex-wrap gap-5">
         {solDataNfts &&
           solDataNfts

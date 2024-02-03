@@ -22,6 +22,7 @@ export const Bridge: React.FC = () => {
   const isSolanaLoggedIn = useUserStore((state) => state.isSolanaLoggedIn);
   const solBalance = useUserStore((state) => state.solanaBalance);
   const solDataNfts = useUserStore((state) => state.solanaDataNfts);
+  const { updateIsBridgeLoading } = useUserStore((state) => state);
 
   const [dataNfts, setDataNfts] = useState<Array<DataNft>>([]);
   const [selectedDataNfts, setSelectedDataNfts] = useState<Array<DataNft>>([]);
@@ -40,6 +41,7 @@ export const Bridge: React.FC = () => {
   async function bridgeSol(): Promise<any> {
     // console.log("Before req");
     try {
+      await updateIsBridgeLoading(true);
       const url = "https://sol-mvx-nft-bridge-poc-production.up.railway.app/process";
       // console.log("Before post");
       const { data } = await axios.post(
@@ -53,7 +55,8 @@ export const Bridge: React.FC = () => {
           },
         }
       );
-      // console.log("Inside post");
+      await updateIsBridgeLoading(false);
+      console.log(data);
       return data;
     } catch (error) {
       console.error(error);
@@ -114,6 +117,7 @@ export const Bridge: React.FC = () => {
           alt="MultiversX Logo"
           isLoggedIn={isMvxLoggedIn}
           dataNfts={dataNfts}
+          isSolDataNfts={false}
           selectedDataNfts={selectedDataNfts}
           setSelectedDataNfts={setSelectedDataNfts}
         />
@@ -127,6 +131,7 @@ export const Bridge: React.FC = () => {
           alt="Solana Logo"
           isLoggedIn={isSolanaLoggedIn}
           dataNfts={solDataNfts}
+          isSolDataNfts={true}
           selectedDataNfts={selectedDataNfts}
           setSelectedDataNfts={setSelectedDataNfts}
         />

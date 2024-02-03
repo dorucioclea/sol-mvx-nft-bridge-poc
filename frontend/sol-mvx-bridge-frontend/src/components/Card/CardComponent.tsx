@@ -13,11 +13,12 @@ type CardComponentProps = {
   alt: string;
   isLoggedIn: boolean;
   dataNfts: Array<DataNft>;
+  isSolDataNfts?: boolean;
   selectedDataNfts: Array<DataNft>;
   setSelectedDataNfts: Dispatch<SetStateAction<Array<DataNft>>>;
 };
 export const CardComponent: React.FC<CardComponentProps> = (props) => {
-  const { title, imgSrc, alt, logo, isLoggedIn, dataNfts, selectedDataNfts, setSelectedDataNfts } = props;
+  const { title, imgSrc, alt, logo, isLoggedIn, dataNfts, isSolDataNfts, selectedDataNfts, setSelectedDataNfts } = props;
   // console.log(selectedDataNfts);
 
   const updateDataNfts = (newDataNft: DataNft) => {
@@ -58,7 +59,7 @@ export const CardComponent: React.FC<CardComponentProps> = (props) => {
         {isLoggedIn ? (
           dataNfts?.map((dataNft, index) => (
             <div key={index} onClick={() => updateDataNfts(dataNft)}>
-              <DataNftsCard mvxDataNft={dataNft} isSelected={isSelected(dataNft)} />
+              <DataNftsCard dataNft={dataNft} isSolDataNfts={isSolDataNfts} isSelected={isSelected(dataNft)} />
             </div>
           ))
         ) : (

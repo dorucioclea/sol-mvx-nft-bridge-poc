@@ -56,7 +56,7 @@
     @apply border-border;
   }
   body {
-    @apply dark bg-background text-foreground;
+    @apply dark bg-background text-foreground font-barlow font-normal;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }

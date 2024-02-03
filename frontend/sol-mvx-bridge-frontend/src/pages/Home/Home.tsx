@@ -25,7 +25,7 @@ export const Home: React.FC = () => {
           <div className="flex bg-gradient-to-r from-[#00E4C850] via-[#1768E250] to-[#E07EDD50] rounded-full p-0.5">
             <span className="bg-black/30 rounded-full px-4 py-1.5">Bridge your Data NFTs between Solana and MultiversX</span>
           </div>
-          <span className="text-[6rem]">The Data NFT Portal Opens</span>
+          <span className="text-[4.5rem] font-epilogue font-semibold">The Data NFT Portal Opens</span>
           <span className="text-xl text-muted-foreground font-thin text-center">
             Data NFTs are valuable real-world data assets wrapped into NFT tokens.
             <br />
@@ -45,9 +45,9 @@ export const Home: React.FC = () => {
       </div>
       <div className="relative w-[100%] z-0">
         <motion.div className="absolute top-[60%] left-[35%] z-30" animate={controls}>
-          <motion.img src={dataNft} alt="mvxDataNft" />
+          <motion.img src={mvxDataNft} alt="mvxDataNft" />
         </motion.div>
-        <img src={landing} alt="solCircle" className="sticky w-full bg-cover bg-center h-[93svh]" />
+        <img src={landing} alt="solCircle" className="flex w-full bg-cover bg-center h-[93svh]" />
       </div>
     </div>
   );
