@@ -15,6 +15,7 @@ export const SolInventory: React.FC = () => {
   const solDataNfts = useUserStore((state) => state.solanaDataNfts);
 
   const getViewData = async (tokenMint: string) => {
+    setModalContent("");
     const getPreaccesMessage = await axios.get("https://sol-mvx-nft-bridge-poc-production.up.railway.app/preaccess?chainId=ED");
     const { signature, publicKey } = await window.solana.signMessage(new TextEncoder().encode(getPreaccesMessage.data.nonce), "utf8");
 

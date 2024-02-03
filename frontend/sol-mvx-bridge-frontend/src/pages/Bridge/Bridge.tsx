@@ -21,6 +21,7 @@ export const Bridge: React.FC = () => {
   const storePublicKey = useUserStore((state) => state.publicKey);
   const isSolanaLoggedIn = useUserStore((state) => state.isSolanaLoggedIn);
   const solBalance = useUserStore((state) => state.solanaBalance);
+  const solDataNfts = useUserStore((state) => state.solanaDataNfts);
 
   const [dataNfts, setDataNfts] = useState<Array<DataNft>>([]);
   const [selectedDataNfts, setSelectedDataNfts] = useState<Array<DataNft>>([]);
@@ -125,7 +126,7 @@ export const Bridge: React.FC = () => {
           logo={solText}
           alt="Solana Logo"
           isLoggedIn={isSolanaLoggedIn}
-          dataNfts={[]}
+          dataNfts={solDataNfts}
           selectedDataNfts={selectedDataNfts}
           setSelectedDataNfts={setSelectedDataNfts}
         />
