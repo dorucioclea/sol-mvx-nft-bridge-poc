@@ -42,9 +42,9 @@ The implementation can easily be generalised to normal NFTs as well, even though
 
 ## Architecture
 
-The application is divided into four main parts: the frontend, the backend, a MultiversX smart contract.
+The application is divided into three main parts: the frontend, the backend, a MultiversX smart contract.
 
-The frontend allows the user to do the following:
+The frontend is a user-friendly interface built with React.js, enabling interaction with the bridge features. The frontend allows the user to do the following:
 
 - Connect their MultiversX wallet
 - Connect their Solana wallet
@@ -54,14 +54,14 @@ The frontend allows the user to do the following:
 - Transfer Data NFTs from MultiversX to Solana
 - Transfer Data NFTs from Solana to MultiversX
 
-The backend is responsible for the following:
+The backend is a robust Nest.js server responsible for interacting with both blockchains, handling NFT conversion, and facilitating smooth transfers. The backend is responsible for the following:
 
 - Read the state of the MultiversX Smart Contract to see which NFTs are locked for bridging
 - For NFTs locked on MultiversX side, the backend will mint the NFT on Solana and send it to the user
 - For NFTs burned on Solana side, the backend will unlock the NFT on MultiversX and send it to the user
 - Allow users to view the attached Data Streams for their Data NFTs on Solana
 
-The MultiversX smart contract is responsible for the following:
+The MultiversX smart contract facilitates the initial NFT transfer process and is responsible for the following:
 
 - Accept locking of NFTs for bridging
 - Unlock NFTs that are bridged back to MultiversX
@@ -70,7 +70,7 @@ The MultiversX smart contract is responsible for the following:
 
 ## Directory structure
 
-- backend: Contains the code for the backend. Uses the recommended and approved by the MultiversX [folder structure](https://github.com/multiversx/mx-template-service) within. The backend is written in Nest.js. Inside the backend folder, there is a folder called config with different values (set for the MultiversX devnet). Inside the src folder, there is a folder called common, which contains general purpose configs, database connection setups and entities. We also have an endpoints folder. Inside each folder in endpoints, a different endpoint is coded.
+- backend: Contains the code for the backend service. Uses the recommended and approved by the MultiversX [folder structure](https://github.com/multiversx/mx-template-service) within. The backend is written in Nest.js. Inside the backend folder, there is a folder called config with different values (set for the MultiversX devnet). Inside the src folder, there is a folder called common, which contains general purpose configs, database connection setups and entities. We also have an endpoints folder. Inside each folder in endpoints, a different endpoint is coded.
 - docs: Contains images used in the README.md file
 - frontend: Contains the React.js application for the frontend. All relevant files are inside the src folder, having different folders for components, pages, store, etc.
 - mvx-sc: Contains the MultiversX smart contract. The smart contract is written in Rust and uses the MultiversX Rust SDK. The relevant code is inside the src folder. The events file is where we defined events so we can listen to them from the backend and the lock file is where the logic and memory storage of the contract are done.
@@ -90,15 +90,39 @@ The MultiversX smart contract is responsible for the following:
 - [Solana Web3JS](https://solana-labs.github.io/solana-web3.js/)
   Used to interact with Solana RPC gateways.
 - [Metaplex Foundation JS SDK](https://github.com/metaplex-foundation/js)
-  User for login state management for Solana wallets.
+  Used to interact with the Metaplex protocol, mint Fungible Assets, login with SOL wallet, etc.
+- [UMI Framework](https://github.com/metaplex-foundation/umi)
+  User to easily interact with Solana programs through zero-dependency, ready-made interfaces.
 
 ## Flow
 
 ### Bridge NFTs from MultiversX to Solana
 
+1. Open the bridge app
+2. Connect your MultiversX wallet
+3. Connect your Solana wallet
+4. Select an NFT to bridge from MultiversX
+5. Confirm the bridge & wait for the transfer to be done (under 1 minute)
+6. Observe that the NFT is now visible in your Solana wallet
+
 ### Viewing Data Stream for Solana Data NFTs
 
+1. Open the bridge app
+2. Connect your Solana wallet
+3. Go to the Solana inventory page
+4. Pick a Data NFT (you have to own at least one)
+5. Click on the "View Data" button
+6. Sign the message with your Phantom wallet
+7. Wait for the ownership to be confirmed and for the data to be shown
+
 ### Bridge NFTs back from Solana to MultiversX
+
+1. Open the bridge app
+2. Connect your MultiversX wallet
+3. Connect your Solana wallet
+4. Pick an NFT to bridge from Solana
+5. Confirm the bridge & wait for the transfer to be done (under 1 minute)
+6. Observe that the NFT is now visible in your MultiversX wallet
 
 ## Next steps
 
