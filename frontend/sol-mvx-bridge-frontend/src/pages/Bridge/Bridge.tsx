@@ -114,9 +114,9 @@ export const Bridge: React.FC = () => {
 
       let tx = new Transaction().add(
         createBurnInstruction(
-          new PublicKey(storePublicKey),
+          new PublicKey(selectedDataNft.newData.tokenAccount.toString()),
           new PublicKey(selectedDataNft.newData.mint.address.toString()), // mint
-          new PublicKey(selectedDataNft.newData.address.toString()), // owner of token account
+          new PublicKey(storePublicKey), // owner of token account
           selectedDataNft.amount
         )
       );

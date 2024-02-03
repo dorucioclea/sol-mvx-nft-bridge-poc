@@ -93,13 +93,21 @@ export const StoreProvider: React.FC<StoreProviderProps> = (props) => {
     //
     const { data } = await axios.post(ironForgeRPC, postData);
     console.log(data);
-    const mintIds = data.result.value.map((item: any) => item.account.data.parsed.info.mint);
+    const mintIds = data.result.value.map((item: any) => {
+      if (item.account.data.parsed.info.tokenAmount.uiAmount > 0) {
+        return {
+          mint: item.account.data.parsed.info.mint,
+          tokenAccount: item.pubkey,
+        };
+      }
+    });
     const _dataNft: any = [];
 
     for (const mintId of mintIds) {
-      const newData: any = await mx.nfts().findByMint({ mintAddress: new PublicKey(mintId) });
+      const newData: any = await mx.nfts().findByMint({ mintAddress: new PublicKey(mintId.mint) });
       const { data } = await axios.get(newData.uri);
       if (newData.model === "sft") {
+        newData.tokenAccount = mintId.tokenAccount;
         _dataNft.push({ newData, dataNftsMetadata: data });
       }
       // console.log(newData.metadataAddress.toString());
