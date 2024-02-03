@@ -96,6 +96,8 @@ The MultiversX smart contract facilitates the initial NFT transfer process and i
 
 ## Flow
 
+![Data NFT MvX <-> SOL Bridge PoC](./docs/landing-page.png)
+
 ### Bridge NFTs from MultiversX to Solana
 
 1. Open the bridge app
@@ -123,6 +125,8 @@ The MultiversX smart contract facilitates the initial NFT transfer process and i
 4. Pick an NFT to bridge from Solana
 5. Confirm the bridge & wait for the transfer to be done (under 1 minute)
 6. Observe that the NFT is now visible in your MultiversX wallet
+
+![Bridging from SOL to MvX](./docs/bridging.png)
 
 ## Next steps
 
