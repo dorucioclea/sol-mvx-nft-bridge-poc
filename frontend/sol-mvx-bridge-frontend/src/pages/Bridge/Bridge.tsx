@@ -140,6 +140,7 @@ export const Bridge: React.FC = () => {
 
       const status = statusRes.data.status;
     }
+    setSelectedDataNfts([]);
   };
 
   useEffect(() => {
