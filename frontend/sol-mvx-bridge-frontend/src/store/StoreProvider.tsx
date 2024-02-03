@@ -94,12 +94,11 @@ export const StoreProvider: React.FC<StoreProviderProps> = (props) => {
     const { data } = await axios.post(ironForgeRPC, postData);
     console.log(data);
     const mintIds = data.result.value.map((item: any) => {
-      if (item.account.data.parsed.info.tokenAmount.uiAmount > 0) {
-        return {
-          mint: item.account.data.parsed.info.mint,
-          tokenAccount: item.pubkey,
-        };
-      }
+      console.log(typeof item.account.data.parsed.info.tokenAmount.uiAmount);
+      return {
+        mint: item.account.data.parsed.info.mint,
+        tokenAccount: item.pubkey,
+      };
     });
     const _dataNft: any = [];
 

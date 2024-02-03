@@ -12,17 +12,19 @@ type CardComponentProps = {
   logo: string;
   alt: string;
   isLoggedIn: boolean;
-  dataNfts: Array<DataNft>;
+  dataNfts: Array<DataNft | any>;
   isSolDataNfts?: boolean;
-  selectedDataNfts: Array<DataNft>;
-  setSelectedDataNfts: Dispatch<SetStateAction<Array<DataNft>>>;
+  selectedDataNfts: Array<DataNft | any>;
+  setSelectedDataNfts: Dispatch<SetStateAction<Array<DataNft | any>>>;
 };
 export const CardComponent: React.FC<CardComponentProps> = (props) => {
   const { title, imgSrc, alt, logo, isLoggedIn, dataNfts, isSolDataNfts, selectedDataNfts, setSelectedDataNfts } = props;
   // console.log(selectedDataNfts);
 
-  const updateDataNfts = (newDataNft: DataNft) => {
-    const index = selectedDataNfts?.findIndex((item) => item.nonce === newDataNft.nonce);
+  const updateDataNfts = (newDataNft: DataNft | any) => {
+    const index = !isSolDataNfts
+      ? selectedDataNfts?.findIndex((item) => item.nonce === newDataNft.nonce)
+      : selectedDataNfts?.findIndex((item) => item.newData?.address?.toString() === newDataNft.newData?.address?.toString());
 
     if (index !== -1) {
       // console.log("Element exists, remove it");
@@ -35,8 +37,11 @@ export const CardComponent: React.FC<CardComponentProps> = (props) => {
     }
   };
 
-  const isSelected = (dataNft: DataNft) => {
-    const index = selectedDataNfts?.findIndex((item) => item.nonce === dataNft.nonce);
+  const isSelected = (dataNft: DataNft | any) => {
+    console.log(!isSolDataNfts);
+    const index = !isSolDataNfts
+      ? selectedDataNfts?.findIndex((item) => item.nonce === dataNft.nonce)
+      : selectedDataNfts?.findIndex((item) => item.newData?.address?.toString() === dataNft.newData?.address?.toString());
     if (index !== -1) {
       return true;
     } else {
@@ -57,11 +62,17 @@ export const CardComponent: React.FC<CardComponentProps> = (props) => {
       </CardContent>
       <CardFooter className="flex flex-wrap border rounded-md m-1.5 h-[20rem] overflow-y-scroll gap-2 py-3">
         {isLoggedIn ? (
-          dataNfts?.map((dataNft, index) => (
-            <div key={index} onClick={() => updateDataNfts(dataNft)}>
-              <DataNftsCard dataNft={dataNft} isSolDataNfts={isSolDataNfts} isSelected={isSelected(dataNft)} />
-            </div>
-          ))
+          dataNfts
+            ?.filter((datanft) => Number(datanft.newData?.mint.supply.basisPoints.toString()) > 0 || !isSolDataNfts)
+            .map((dataNft, index) => (
+              <div
+                key={index}
+                onClick={() => {
+                  updateDataNfts(dataNft);
+                }}>
+                <DataNftsCard dataNft={dataNft} isSolDataNfts={isSolDataNfts} isSelected={isSelected(dataNft)} />
+              </div>
+            ))
         ) : (
           <div className="flex justify-center items-center w-full">
             <Alert variant="warning">
