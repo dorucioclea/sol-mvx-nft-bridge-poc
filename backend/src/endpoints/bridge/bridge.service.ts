@@ -309,7 +309,7 @@ export class BridgeService {
 
     umi.use(keypairIdentity(keypair)).use(mplTokenMetadata());
 
-    let collection: CollectionB = await this.findCollectionByTokenIdentifierAndNonce(
+    const collection: CollectionB = await this.findCollectionByTokenIdentifierAndNonce(
       lockEvent.tokenIdentifier,
       lockEvent.nonce
     );
@@ -337,37 +337,43 @@ export class BridgeService {
         sftPublicKey: nftMint.publicKey.toString(),
       };
 
+      await mintV1(umi, {
+        mint: publicKey(collection.sftPublicKey),
+        authority: signerKp,
+        amount: lockEvent.amount,
+        tokenOwner: fromWeb3JsPublicKey(recipientPubkey),
+        tokenStandard: TokenStandard.FungibleAsset,
+      }).sendAndConfirm(umi);
+
       const storedCollection = await this.createCollection(collectionDto);
 
       if (!storedCollection) {
         throw new HttpException("Error storing collection", HttpStatus.INTERNAL_SERVER_ERROR);
       }
+    } else {
+      const collection = await this.findCollectionByTokenIdentifierAndNonce(lockEvent.tokenIdentifier, lockEvent.nonce);
+      // const sftPrivateKeyArray = collection.sftPrivateKey.split(",").map(Number);
+      // const sftKeyPair = umi.eddsa.createKeypairFromSecretKey(Uint8Array.from(sftPrivateKeyArray));
+
+      await mintV1(umi, {
+        mint: publicKey(collection.sftPublicKey),
+        authority: signerKp,
+        amount: lockEvent.amount,
+        tokenOwner: fromWeb3JsPublicKey(recipientPubkey),
+        tokenStandard: TokenStandard.FungibleAsset,
+      }).sendAndConfirm(umi);
+
+      const tx = await this.createTransaction({
+        txHash: txHash,
+        timestamp: Math.floor(Date.now() / 1000),
+        address: address,
+      });
+
+      this.logger.log(
+        `Transaction ${txHash} processed successfully. Collection created: ${collection.id}, ${collection.tokenIdentifier}, ${collection.nonce}, Solana mint: ${collection.sftPublicKey}  `
+      );
+      return collection;
     }
-
-    collection = await this.findCollectionByTokenIdentifierAndNonce(lockEvent.tokenIdentifier, lockEvent.nonce);
-    // const sftPrivateKeyArray = collection.sftPrivateKey.split(",").map(Number);
-    // const sftKeyPair = umi.eddsa.createKeypairFromSecretKey(Uint8Array.from(sftPrivateKeyArray));
-
-    console.log(collection);
-
-    await mintV1(umi, {
-      mint: publicKey(collection.sftPublicKey),
-      authority: signerKp,
-      amount: lockEvent.amount,
-      tokenOwner: fromWeb3JsPublicKey(recipientPubkey),
-      tokenStandard: TokenStandard.FungibleAsset,
-    }).sendAndConfirm(umi);
-
-    const tx = await this.createTransaction({
-      txHash: txHash,
-      timestamp: Math.floor(Date.now() / 1000),
-      address: address,
-    });
-
-    this.logger.log(
-      `Transaction ${txHash} processed successfully. Collection created: ${collection.id}, ${collection.tokenIdentifier}, ${collection.nonce}, Solana mint: ${collection.sftPublicKey}  `
-    );
-    return collection;
   }
 
   private mergeAndFilterLogs(response, logIdentifier: String) {
