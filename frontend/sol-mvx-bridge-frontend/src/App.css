@@ -1,3 +1,6 @@
+@import url('https://fonts.googleapis.com/css2?family=Epilogue:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600;700&display=swap');
+
 .gradient-shadow {
   position: absolute;
   background: linear-gradient(to bottom, black, #0f766e, #8b5cf6);

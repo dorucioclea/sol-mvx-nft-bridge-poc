@@ -1,12 +1,14 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { useUserStore } from "../../../store/user";
 import axios from "axios";
 import { Button } from "../../../ui/button";
 import bs58 from "bs58";
-import { clusterApiUrl, Connection, PublicKey } from "@solana/web3.js";
-import { Metaplex } from "@metaplex-foundation/js";
 import { Card, CardContent, CardHeader } from "../../../ui/card";
 import { SolInventoryModal } from "./components/SolInventoryModal";
+import solFmLogo from "../../../assets/solanaFm.png";
+import solLogo from "../../../assets/solLogo.png";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../../ui/tooltip";
+import { TooltipComponent } from "../../../components/Tooltip/TooltipComponent";
 
 export const SolInventory: React.FC = () => {
   const { publicKey } = useUserStore((state) => state);
@@ -36,7 +38,7 @@ export const SolInventory: React.FC = () => {
 
   return (
     <div className="flex flex-col justify-center items-left gap-4 w-full my-3">
-      <span className="text-3xl font-semibold">My Data NFT's</span>
+      <span className="text-3xl font-semibold font-epilogue">My Data NFT's</span>
       <div className="flex flex-row flex-wrap gap-5">
         {solDataNfts &&
           solDataNfts
@@ -53,7 +55,29 @@ export const SolInventory: React.FC = () => {
                   </div>
                   <div className="flex justify-between">
                     <span>Token address:&nbsp;</span>
-                    <span className="text-muted-foreground">
+                    <span className="flex items-center text-muted-foreground gap-0.5">
+                      <TooltipComponent
+                        tooltipTrigger={
+                          <a
+                            href={`https://solana.fm/address/${dataNft.newData.mint.address.toString()}?cluster=mainnet-alpha`}
+                            target="_blank"
+                            rel="noreferrer noopener">
+                            <img src={solFmLogo} alt="solFmLogo" className="w-5 h-5" />
+                          </a>
+                        }
+                        tooltipContent="open in SolanaFm"
+                      />
+                      <TooltipComponent
+                        tooltipTrigger={
+                          <a
+                            href={`https://explorer.solana.com/address/${dataNft.newData.mint.address.toString()}?cluster=devnet`}
+                            target="_blank"
+                            rel="noreferrer noopener">
+                            <img src={solLogo} alt="solFmLogo" className="w-4 h-4" />
+                          </a>
+                        }
+                        tooltipContent="open in Solana Explorer"
+                      />
                       {dataNft.newData.mint.address.toString().substring(0, 4)}...
                       {dataNft.newData.mint.address
                         .toString()

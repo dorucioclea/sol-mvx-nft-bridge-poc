@@ -3,6 +3,7 @@ import { useUserStore } from "./user";
 import { clusterApiUrl, Connection, PublicKey } from "@solana/web3.js";
 import { Metaplex } from "@metaplex-foundation/js";
 import axios from "axios";
+import { sleep } from "../../lib/utils";
 
 type StoreProviderProps = {
   children: React.ReactNode;
@@ -11,7 +12,9 @@ type StoreProviderProps = {
 export const StoreProvider: React.FC<StoreProviderProps> = (props) => {
   const { children } = props;
 
-  const { updatePublicKey, updateIsSolanaLoggedIn, updateSolanaBalance, updateSolanaDataNfts, isSolanaLoggedIn, publicKey } = useUserStore((state) => state);
+  const { updatePublicKey, updateIsSolanaLoggedIn, updateSolanaBalance, updateSolanaDataNfts, isSolanaLoggedIn, publicKey, isBridgeLoading } = useUserStore(
+    (state) => state
+  );
 
   const solanaPublicKey = localStorage.getItem("solanaPublicKey");
 
@@ -33,6 +36,13 @@ export const StoreProvider: React.FC<StoreProviderProps> = (props) => {
       await getAllTokenForAddress();
     })();
   }, [isSolanaLoggedIn]);
+
+  useEffect(() => {
+    (async () => {
+      await sleep(3000);
+      await getAllTokenForAddress();
+    })();
+  }, [isBridgeLoading]);
 
   const ironForgeRPC = "https://rpc.ironforge.network/devnet?apiKey=01HNJAHBRF5A8MXB0VYCMSHNCZ";
 
@@ -83,16 +93,28 @@ export const StoreProvider: React.FC<StoreProviderProps> = (props) => {
     //
     const { data } = await axios.post(ironForgeRPC, postData);
     console.log(data);
-    const mintIds = data.result.value.map((item: any) => item.account.data.parsed.info.mint);
+    const mintIds = data.result.value.map((item: any) => {
+      console.log(typeof item.account.data.parsed.info.tokenAmount.uiAmount);
+      return {
+        mint: item.account.data.parsed.info.mint,
+        tokenAccount: item.pubkey,
+      };
+    });
     const _dataNft: any = [];
 
     for (const mintId of mintIds) {
-      const newData: any = await mx.nfts().findByMint({ mintAddress: new PublicKey(mintId) });
+      const newData: any = await mx.nfts().findByMint({ mintAddress: new PublicKey(mintId.mint) });
       const { data } = await axios.get(newData.uri);
-      _dataNft.push({ newData, dataNftsMetadata: data });
+      if (newData.model === "sft") {
+        newData.tokenAccount = mintId.tokenAccount;
+        _dataNft.push({ newData, dataNftsMetadata: data });
+      }
       // console.log(newData.metadataAddress.toString());
     }
-    console.log(_dataNft);
+    console.log(
+      _dataNft,
+      _dataNft.map((item: any) => item.newData.mint.supply.basisPoints.toString())
+    );
     updateSolanaDataNfts(_dataNft);
     //
     // setDataNfts(mintId);

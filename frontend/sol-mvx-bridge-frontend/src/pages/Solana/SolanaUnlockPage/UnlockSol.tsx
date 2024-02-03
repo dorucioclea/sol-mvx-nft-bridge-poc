@@ -16,7 +16,7 @@ export const UnlockSol: React.FC = () => {
   const connect = async () => {
     if (!provider) return;
     try {
-      const resp = await provider.connect({ onlyIfTrusted: true });
+      const resp = await provider.connect();
       if (resp.publicKey.toString()) {
         updateIsSolanaLoggedIn(true);
       }
@@ -59,7 +59,7 @@ export const UnlockSol: React.FC = () => {
   }, [provider]);
 
   const buttonStyles = useMemo(() => {
-    return "!rounded-xl !border-0 !bg-teal-500 !shadow-xl !w-full !m-0 !px-10";
+    return "!rounded-xl !border-0 !shadow-xl !w-full !m-0 !px-10";
   }, []);
 
   return (

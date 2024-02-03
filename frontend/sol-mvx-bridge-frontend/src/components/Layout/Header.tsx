@@ -12,6 +12,7 @@ import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { clearMvxSessionStorage, clearSolSessionStorage, getProvider } from "../../../lib/utils";
 import mvxLogo from "../../assets/mvxLogo.png";
 import solLogo from "../../assets/solLogo.png";
+import BigNumber from "bignumber.js";
 
 export const Header: React.FC = () => {
   const isMxLoggedIn = useGetIsLoggedIn();
@@ -59,9 +60,11 @@ export const Header: React.FC = () => {
       <div className="flex flex-row justify-between px-12 items-center h-14 ">
         <div className="flex justify-center items-center gap-10">
           <Link to={"/"} className="flex flex-row">
-            <p className="bg-gradient-to-r bg-clip-text text-transparent from-violet-500 to-teal-400 text-xl text-left font-bold">Bridge-POC</p>
+            <p className="bg-gradient-to-r bg-clip-text text-transparent from-violet-500 to-teal-400 text-xl text-left font-semibold font-epilogue">
+              Bridge-POC
+            </p>
           </Link>
-          <Link to={"/bridge"} className="text-lg font-medium hover:scale-105 hover:-translate-y-0.5 hover:transition hover:duration-300">
+          <Link to={"bridge"} className="text-lg font-medium hover:scale-105 hover:-translate-y-0.5 hover:transition hover:duration-300">
             Bridge
           </Link>
         </div>
@@ -70,14 +73,17 @@ export const Header: React.FC = () => {
             <DropdownComponent
               triggerButton={
                 <Button className="bg-transparent font-semibold" variant="ghost">
-                  {Number(formatAmount({ input: balance ?? 0 })).toFixed(3)} EGLD
+                  {BigNumber(balance)
+                    .div(10 ** 18)
+                    .toFixed(3)}
+                  EGLD
                   <Avatar className="w-8 h-8 ml-2">
                     <AvatarImage src={mvxAvatar} alt="mvxAvatar" />
                     <AvatarFallback>MVX</AvatarFallback>
                   </Avatar>
                 </Button>
               }
-              pathToRedirect={"/mvx/mvxInventory"}
+              pathToRedirect={"mvx/mvxInventory"}
               walletAddress={address}
               disconnectWallet={handleMvxLogout}
             />
@@ -99,7 +105,7 @@ export const Header: React.FC = () => {
                   </Avatar>
                 </Button>
               }
-              pathToRedirect={"/sol/solInventory"}
+              pathToRedirect={"sol/solInventory"}
               disconnectWallet={handleSolLogout}
             />
           ) : (
@@ -113,7 +119,7 @@ export const Header: React.FC = () => {
       </div>
       <div className="flex flex-row gap-x-5 justify-left px-12 items-center h-10 border-b border-b-gray-400 font-medium">
         <NavLink
-          to={"/mvx"}
+          to={"mvx"}
           end
           className={({ isActive }) =>
             isActive ? "flex items-center justify-center bg-slate-700/40 pl-2" : "flex items-center justify-center bg-transparent pl-2"
@@ -123,7 +129,7 @@ export const Header: React.FC = () => {
         </NavLink>
 
         <NavLink
-          to={"/sol"}
+          to={"sol"}
           end
           className={({ isActive }) =>
             isActive ? "flex items-center justify-center bg-slate-700/40 pl-2" : "flex items-center justify-center bg-transparent pl-2"

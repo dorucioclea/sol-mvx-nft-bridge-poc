@@ -89,3 +89,5 @@ export async function lockNftTransaction(
   // console.log(sessionId, error);
   return { sessionId, error }; // use this sessionId to get txHash
 }
+
+export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
