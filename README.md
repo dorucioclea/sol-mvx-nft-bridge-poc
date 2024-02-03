@@ -117,6 +117,8 @@ The MultiversX smart contract facilitates the initial NFT transfer process and i
 6. Sign the message with your Phantom wallet
 7. Wait for the ownership to be confirmed and for the data to be shown
 
+![Viewing Data on SOL](./docs/viewing-data.png)
+
 ### Bridge NFTs back from Solana to MultiversX
 
 1. Open the bridge app
