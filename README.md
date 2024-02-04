@@ -1,5 +1,7 @@
 # MultiversX - Solana NFT Bridge
 
+![MultiversX - Solana NFT Bridge](./docs/hero.png)
+
 ## Introduction
 
 This repository contains an MVP implementation for a bridge between the Solana and MultiversX blockchains. The bridge is designed to allow users to transfer NFTs from MultiversX to Solana and back. The implementation is made for Data NFTs. Data NFTs are Itheum's proprietary technology which enhances normal NFTs by attaching a Data Stream to them. This Data Stream can be used to store any kind of dynamic data, including but not limited to, images, music, videos, documents, etc. Data NFTs allows the attaching of said Data Stream securely, making the stream accessible only to the owner of the NFT.

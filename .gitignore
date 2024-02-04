@@ -1,6 +1,5 @@
 *.pem
 output/
 target/
-
-
+.DS_Store
 .vs_code
